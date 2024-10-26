@@ -149,8 +149,8 @@ public:
 	//深度优先搜索（DFS）算法,并对节点进行处理,vis保存是否访问
 	void dfs(int u, std::vector<bool>& vis, std::vector<Edge> graph, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
-		//已经访问过
-		if (vis[u])return;
+		//已经访问过或者u不合法
+		if (vis[u]||u<0||u>=vis.size())return;
 
 		//标记访问
 		vis[u] = true;
@@ -190,11 +190,8 @@ public:
 	//广度优先搜索（BFS）算法,并对节点进行处理,vis保存是否访问
 	void bfs(int start, std::vector<bool>& vis, std::vector<Edge> graph, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
-		//已经访问
-		if (vis[start])
-		{
-			return;
-		}
+		//已经访问过或者start不合法
+		if (vis[start] || start < 0 || start >= vis.size())return;
 
 		std::queue<int> q;//存放当前连通分支节点，并要着start节点一圈圈增加
 

@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Adjacency_Matrix.h" />
     <ClInclude Include="Edge.h" />
   </ItemGroup>
   <ItemGroup>

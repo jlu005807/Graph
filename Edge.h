@@ -12,6 +12,7 @@
 struct Edge
 {
 	//存储边节点的编号
+	//u->v
 	int u;
 	int v;
 
@@ -235,6 +236,174 @@ public:
 		{
 			bfs(i, vis, graph, address); // 从未访问的节点开始BFS
 		}
+	}
+
+	//拓扑排序就是将AOV - 网中所有顶点排成一个线性序列，该序列满足：但是该序列不唯一
+	// 若在AOV - 网中由顶点Vi, 到顶点Vj；有一条路径，则在该线性序列中的顶点Vi; 必定在顶点Vj之前。
+	//在此函数里默认为有向无环图（DAG)
+	std::vector<int> TopologicalSort(std::vector<Edge> Graph, int number)
+	{
+		std::vector<int> Topo;//记录拓扑排序
+
+		std::queue<int> zero_in_degree;//记录入度为0的顶点
+
+		//存放各个顶点的入度
+		std::vector<int> indegree(number,0);
+
+		//计算各个顶点的入度
+		for (const auto edge : Graph)
+		{
+			indegree[edge.v]++;
+		}
+
+		//将入度为0的点放入zero_in_degree中
+		for (int i = 0; i < number; i++)
+		{
+			if (indegree[i] == 0)
+			{
+				zero_in_degree.push(i);
+			}
+		}
+
+		//Kahn算法
+		//选择入度为0的节点，输出到结果序列中；
+		//删除该节点以及该节点的边；
+		//重复执行步骤1和2，直到所有节点输出到结果序列中，完成拓扑排序；
+		// 如果最后还存在入度不为0的节点，说明有向图中存在环，无法进行拓扑排序。
+		while (!zero_in_degree.empty())
+		{
+			//取出一个节点处理
+			int u = zero_in_degree.front();
+			zero_in_degree.pop();
+			
+			//放入Topo
+			Topo.push_back(u);
+
+			//删除相应的边,在indegree中逻辑删除
+			for (const auto& edge : Graph)
+			{
+
+				if (edge.u == u)
+				{
+					//相应顶点入度减一
+					indegree[edge.v]--;
+
+					//如果为0放入zero_in_degree
+					if (indegree[edge.v] == 0)
+					{
+						zero_in_degree.push(edge.v);
+					}
+				}
+			}
+
+		}
+
+		//检查是否存在环
+		if (Topo.size() != number)
+		{
+			std::cerr << "Graph has a cycle, topological sorting not possible." << std::endl;
+			return {};
+		}
+
+		//返回Topo
+		return Topo;
+
+	}
+
+
+	//AOE-网是一个带权的有向无环图
+	//其中，顶点表示事件， 弧表示活动，权表示活动持续的时间。
+	//要估算整项工程完成的最短时间，就是要找一条从源点到汇点的带权路径长度最长的路径，称为关键路径(Critical Path)。
+	//故在正常的情况（无环）下，网中只有一个入度为零的点，称作源点，也只有一个出度为零的点，称作汇点。
+	std::vector<int> CriticalPath(std::vector<Edge> Graph, std::vector<int>& weights, int number)
+	{
+		//求出拓扑排序
+		std::vector<int> Topo = TopologicalSort(Graph, number);
+		//有环
+		if (Topo.empty())
+		{
+			std::cout << "图中存在环，无法计算关键路径。" << std::endl;
+			return {};
+		}
+
+		//初始化各顶点的最早发生时间（VE）,对于开始点即拓扑排序第一个点的VT为0
+		std::vector<int> VE(number, 0);
+
+		//计算各个顶点的VE
+		for (const auto& u : Topo)
+		{
+			for (int i = 0; i < Graph.size(); i++)
+			{
+				//更新当前节点的邻接点的VE
+				if (Graph[i].u == u)
+				{
+					int v = Graph[i].v;
+
+					VE[v] = std::max(VE[v], VE[u] + weights[i]);
+				}
+			}
+		}
+
+		//初始化各节点的最晚发生时间（VL）,对于结束点即拓扑排序最后一个点的LT为VE[number - 1]
+		std::vector<int> VL(number, VE[number - 1]);
+
+
+		//逆拓扑排序计算各个顶点VL
+		for (auto it = Topo.rbegin(); it != Topo.rend(); it++)
+		{
+			int u = *it;
+			for (int i = 0; i < Graph.size(); i++)
+			{
+				if (Graph[i].u == u)
+				{
+					VL[u] = std::min(VL[u], VL[Graph[i].v] - weights[i]);
+				}
+			}
+		}
+
+		//计算各个弧即活动的最早开始时间ET，即各个弧起始点即弧尾的VE
+		std::vector<int> ET(Graph.size(), 0);
+
+		for (int i = 0; i < Graph.size(); i++)
+		{
+			ET[i] = VE[Graph[i].u];
+		}
+
+		//计算弧i即活动的最晚开始时间LT，即各个弧结束点即弧头的VL-weights[i]
+		std::vector<int> LT(Graph.size(), 0);
+
+		for (int i = 0; i < Graph.size(); i++)
+		{
+			LT[i] = VL[Graph[i].v] - weights[i];
+		}
+
+
+
+		//关键路径即那些ET=LT的活动即弧，这些活动无法拖延，必须同步工程实现
+		//如果ET不等于LT,那么ET和LT的差值就是这些活动可以拖延的时间即活动的时间余量
+		//识别关键路径并保存关键路径节点序列，如果有多个关键路径只求其中一个并且路径存放弧的编号
+		std::vector<int> critical_path;
+
+		for (int i = 0; i < Graph.size(); i++)
+		{
+			//第一个路径
+			if (ET[i] == LT[i] && critical_path.empty())
+			{
+				critical_path.push_back(i);
+			}
+			else if(ET[i] == LT[i])//除了第一个路径后接下来的路径必须考虑连续性即头尾相连，避免将多个关键路径返回
+			{
+				int k = critical_path.back();
+				if (Graph[k].v == Graph[i].u)
+				{
+					critical_path.push_back(i);
+				}
+			}
+		}
+
+		std::cout << "项目的最早完成时间为：" << VE[number-1] << std::endl;
+		return critical_path;  // 返回关键路径
+		
 	}
 
 };

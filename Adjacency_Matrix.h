@@ -11,6 +11,9 @@
 //并且二维数组难以改变结构所以不考虑增加和删除节点但是可以增删边，并且二维数组空间大不适用于稀疏图
 //其实无向图为对称矩阵可以压缩为一维数组存放，但是实现逻辑相似不考虑分离  
 
+
+//小技巧：对于有向无向图图，并且规定没有弧为0，有弧为1，则矩阵A^n[i][j]的值表示从顶点i到顶点j中路径长度为n的数目
+
 class Adj_Matrix
 {
 public:
@@ -33,7 +36,7 @@ class AdjMatrix_manager
 {
 public:
 
-	//构造n个顶点，m条边的图,
+	//构造n个顶点，m条边的图
 	Adj_Matrix CreateGraph(int n, int m, int edge[][2],bool direct)
 	{
 		//初始化邻接矩阵

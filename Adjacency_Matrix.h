@@ -420,8 +420,77 @@ class AdjMatrix_manager
 			return {};
 		}
 
+		//边的数量
+		int edge_num = 0;
+
 		//初始化各顶点的最早发生时间（VE）,对于开始点即拓扑排序第一个点的VT为0
 		std::vector<int> VE(number, 0);
+
+		//计算各个顶点的VE
+		for (int u=0;u<Topo.size();u++)
+		{
+			for (int v = 0; v < number; v++)
+			{
+				//更新当前节点的邻接点的VE
+				if (adj.graph[u][v] != INT_MAX)
+				{
+					VE[v] = std::max(VE[v], VE[u] + adj.graph[u][v]);
+					edge_num++;
+				}
+			}
+		}
+
+		//初始化各节点的最晚发生时间（VL）,对于结束点即拓扑排序最后一个点的LT为VE[number - 1]
+		std::vector<int> VL(number, VE[number - 1]);
+
+
+		//逆拓扑排序计算各个顶点VL
+		for (auto it = Topo.rbegin(); it != Topo.rend(); it++)
+		{
+			int u = *it;
+			for (int i = 0; i < number; i++)
+			{
+				if (adj.graph[u][i] != INT_MAX)
+				{
+					VL[u] = std::min(VL[u], VL[i] - adj.graph[u][i]);
+				}
+			}
+		}
+
+		//计算各个弧即活动的最早开始时间ET，即各个弧起始点即弧尾的VE
+		//计算弧i即活动的最晚开始时间LT，即各个弧结束点即弧头的VL-weights[i]
+		//同时计算关键路径的节点（此时Path内为顶点而非弧）
+		std::vector<int> critical_adjpath;
+
+		for (int u = 0; u < Topo.size(); u++)
+		{
+			for (int v = 0; v < number; v++)
+			{
+				//更新当前节点的为弧尾的活动的ET和LT
+				if (adj.graph[u][v] != INT_MAX)
+				{
+					int ET = VE[u];
+					int LT = VL[v] - adj.graph[u][v];
+					//判断是否为关键路径
+					if (ET == LT)
+					{
+						//如果为空,放入首尾
+						if (critical_adjpath.empty())
+						{
+							critical_adjpath.push_back(u);
+							critical_adjpath.push_back(v);
+						}
+						else if(critical_adjpath.back()==u)//判断首尾是否相接
+						{
+							critical_adjpath.push_back(v);//只放入尾节点
+						}
+					}
+				}
+			}
+		}
+
+		std::cout << "项目的最早完成时间为：" << VE[number - 1] << std::endl;
+		return critical_adjpath;  // 返回关键路径
 
 
 	}

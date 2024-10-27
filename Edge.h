@@ -159,7 +159,7 @@ public:
 		address(u);
 
 		//找到邻接的点访问
-		for (auto i = 0; i < vis.size(); i++)
+		for (auto i = 0; i < graph.size(); i++)
 		{
 			if (graph[i].u == u)
 			{

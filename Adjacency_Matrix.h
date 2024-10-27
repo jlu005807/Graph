@@ -31,6 +31,8 @@ public:
 
 class AdjMatrix_manager
 {
+public:
+
 	//构造n个顶点，m条边的图,
 	Adj_Matrix CreateGraph(int n, int m, int edge[][2],bool direct)
 	{
@@ -57,10 +59,10 @@ class AdjMatrix_manager
 	}
 
 	//构造n个顶点，m条边的网,即带权图
-	Adj_Matrix CreateGraph(int n, int m, int edge[][2],int weights[])
+	Adj_Matrix CreateGraph(int n, int m, int edge[][2], bool direct,std::vector<int> weights)
 	{
 		//初始化邻接矩阵,以int最大值初始化
-		Adj_Matrix one(n);
+		Adj_Matrix one(n,direct);
 
 		//加入边
 		for (int i = 0; i < m; i++)
@@ -74,7 +76,7 @@ class AdjMatrix_manager
 			//如果不是有向图，则对称点同样赋值
 			if (!one.is_direct)
 			{
-				one.graph[v][u] = 1;
+				one.graph[v][u] = weights[i];
 			}
 		}
 
@@ -242,6 +244,9 @@ class AdjMatrix_manager
 			return;
 		}
 
+		//标记已访问
+		vis[u] = true;
+
 		address(u);
 
 		//递归搜索
@@ -283,9 +288,9 @@ class AdjMatrix_manager
 
 		std::queue<int> q;//存放当前连通分支节点，并要着start节点一圈圈增加
 
-		q.push(start);//将起始节点入队
+		vis[start] = true;//标记初始点访问
 
-		vis[start] = true;// 标记为已访问
+		q.push(start);//将起始节点入队
 
 		//队列不为空，即当前连通分支还有为访问的节点
 		while (!q.empty())
@@ -296,12 +301,12 @@ class AdjMatrix_manager
 
 			address(u);       // 处理当前节点
 
-			// 遍历图，找到所有邻接的节点加入队列
-			for (const auto& i : adj.graph[u])
+			// 遍历图，找到所有邻接并且未访问的节点加入队列
+			for (int i=0;i<adj.graph.size();i++)
 			{
-				if (i != INT_MAX)
+				if (adj.graph[u][i] != INT_MAX && !vis[i])
 				{
-					vis[i] = true; // 标记为已访问
+					vis[i] = true;// 标记为已访问
 					q.push(i);     // 将邻接节点入队
 				}
 			}
@@ -325,10 +330,11 @@ class AdjMatrix_manager
 	//生成拓扑排序
 	std::vector<int> TopologicalSort(Adj_Matrix adj)
 	{
-		//无向图
+		// 无向图无法进行拓扑排序
 		if (!adj.is_direct)
 		{
-			return{};
+			std::cerr << "Graph doesn't have direction, topological sorting not possible." << std::endl;
+			return {};
 		}
 
 		int number = adj.graph.size();
@@ -340,14 +346,15 @@ class AdjMatrix_manager
 		//存放各个顶点的入度
 		std::vector<int> indegree(number, 0);
 
-		//计算各个点的度
-		for (int i = 0; i < number; i++)
+		//计算各个点的入度
+		for (int u = 0; u < number; u++)
 		{
-			for (const auto& k : adj.graph[i])
+			for (int v = 0; v < number; v++)
 			{
-				if (k != INT_MAX)
+				//存在边u->v
+				if (adj.graph[u][v] != INT_MAX)
 				{
-					indegree[i]++;
+					indegree[v]++;
 				}
 			}
 		}
@@ -378,12 +385,12 @@ class AdjMatrix_manager
 				if (adj.graph[u][i] != INT_MAX)
 				{
 					indegree[i]--;
-				}
 
-				//如果为0放入zero_in_degree
-				if (indegree[i] == 0)
-				{
-					zero_in_degree.push(i);
+					//如果为0放入zero_in_degree
+					if (indegree[i] == 0)
+					{
+						zero_in_degree.push(i);
+					}
 				}
 			}
 
@@ -403,16 +410,19 @@ class AdjMatrix_manager
 	//关键路径
 	std::vector<int> CriticalPath(Adj_Matrix adj)
 	{
-		//无向图
+		// 无向图无法进行拓扑排序
 		if (!adj.is_direct)
 		{
-			return{};
+			std::cerr << "Graph doesn't have direction, CriticalPath not possible." << std::endl;
+			return {};
 		}
+
 
 		int number = adj.graph.size();
 
-		//求出拓扑排序
+		//拓扑排序
 		std::vector<int> Topo = TopologicalSort(adj);
+
 		//有环
 		if (Topo.empty())
 		{

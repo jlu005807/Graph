@@ -2,6 +2,7 @@
 #include<iostream>
 #include<memory>//便于使用shared_ptr
 #include<vector>
+#include<functional>
 
 //邻接表(Adjacency List) 是图的一种链式存储结构
 //在邻接表中，对图中每个顶点V;建立一个单链表，把与V; 相邻接的顶点放在这个链表中。
@@ -78,10 +79,26 @@ public:
 	//是否为有向图
 	bool is_direct;
 
+	//无data的顶点,默认data为序号
 	Adj_List(int vexnum, int arcnum, bool direct = false) :arcnum(arcnum), is_direct(direct)
 	{
 		//初始化arcnum
 		vertices.resize(vexnum);
+		for (int i = 0; i < vexnum; i++)
+		{
+			vertices[i].data = i;
+		}
+	}
+
+	//需要data的顶点
+	Adj_List(int vexnum, int arcnum, bool direct = false,K datas[]) :arcnum(arcnum), is_direct(direct)
+	{
+		//初始化arcnum
+		vertices.resize(vexnum);
+		for (int i = 0; i < vexnum; i++)
+		{
+			vertices[i].data = datas[i];
+		}
 	}
 
 };
@@ -93,7 +110,7 @@ class AdjList_manager
 public:
 	
 	//构造n个顶点，m条边的图
-	Adj_List CreateGraph(int n, int m, int edge[][2], bool direct=false)
+	Adj_List<K,T> CreateGraph(int n, int m, int edge[][2], bool direct=false)
 	{
 		//初始化
 		Adj_List<K,T> list(n, m, direct);
@@ -121,7 +138,7 @@ public:
 	}
 
 	//构造n个顶点，m条边的带权值的图
-	Adj_List CreateGraph(int n, int m, int edge[][2],std::vector<int> weights, bool direct = false)
+	Adj_List<K,T> CreateGraph(int n, int m, int edge[][2],std::vector<int> weights, bool direct = false)
 	{
 		//初始化
 		Adj_List<K, T> list(n, m, direct);
@@ -149,7 +166,7 @@ public:
 	}
 
 	//若图G存在，销毁图G。
-	void DestroyGraph(Adj_List& list)
+	void DestroyGraph(Adj_List<K,T>& list)
 	{
 		//空图
 		if (list.vertices.size()==0)
@@ -178,4 +195,243 @@ public:
 
 		return;
 	}
+
+	//返回v的第一个邻接顶点的序号。若v在G中没有邻接顶点，则返回 “空”。
+	int FirstAdjVex(Adj_List<K,T>& list, int v)
+	{
+		//空图或者v不合法
+		if (list.vertices.size() == 0 || v < 0 || v >= list.vertices.size())
+		{
+			return -1；
+		}
+
+		//没有邻接点
+		if (!list.vertices[v].firsrarc)
+		{
+			return -1;
+		}
+
+		return list.vertices[v].firsrarc.adjvex;
+	}
+
+	//返回v的（相对千w的）下一个邻接顶点。若w是v的最后一个邻接点，则返回 “空”。
+	int NextAdjVex(Adj_List<K,T>& list, int v, int w)
+	{
+		//空图或者v不合法或者w不合法
+		if (list.vertices.size() == 0 || v < 0 || v >= list.vertices.size() || w < 0 || w >= list.vertices.size())
+		{
+			return -1;
+		}
+
+		std::shared_ptr<ArcNode<T>> arc = list.vertices[v].firstarc;
+
+		//找到w
+		while (arc->nextarc && arc->adjvex != w)
+			arc = arc->nextarc;
+
+		if (arc->nextarc)
+		{
+			return arc->nextarc->adjvex;
+		}
+		else
+		{
+			return -1;
+		}
+
+	}
+
+	//在图G中增添新顶点v。
+	InSertVex(Adj_List<K,T>& list,VexNode<K,T> newvex)
+	{
+		auto it = std::find(list.vertices.begin(), list.vertices.end(), newvex);
+
+		//没找到
+		if (it == list.vertices.end())
+		{
+			list.vertices.push_back(newvex);
+		}
+		else
+		{
+			return;
+		}
+
+	}
+
+	//删除G中顶点v及其相关的弧。
+	DeleteVex(Adj_List<K, T>& list, int v)
+	{
+		//空图或者v不合法
+		if (list.vertices.size() == 0 || v < 0 || v >= list.vertices.size())
+		{
+			return -1;
+		}
+
+		auto it = list.vertices.begin();
+
+		it += v;
+
+		//记录
+		VexNode<K, T> vex = *it;
+
+
+		std::shared_ptr<ArcNode<T>> arc = vex.firstarc;
+
+		while (arc)
+		{
+			DeleteArc(list, v, arc->adjvex);
+		}
+	}
+
+	//在G中删除弧<v, w>, 若G是无向图，则还删除对称弧<w, v>。
+	void DeleteArc(Adj_List<K, T>& list, int v, int w)
+	{
+		//空图或者v不合法或者w不合法
+		if (list.vertices.size() == 0 || v < 0 || v >= list.vertices.size() || w < 0 || w >= list.vertices.size())
+		{
+			return;
+		}
+
+		auto free = [&](std::shared_ptr<ArcNode<T>> arc, int k)->void {
+			while (arc->nextarc && arc->nextarc->adjvex != k)
+			{
+				arc = arc->nextarc;
+			}
+
+			//找到弧
+			if (arc->nextarc)
+			{
+				std::shared_ptr<ArcNode<T>> p;
+
+				p = arc->nextarc;
+
+				arc->nextarc = p->nextarc;
+
+				//主动释放
+				p.reset();
+			}
+
+		};
+
+		free(list.vertices[v], w);
+
+		//如果是无向图，删除对称边
+		if (!list.is_direct)
+		{
+			free(list.vertices[w], v);
+		}
+
+	}
+
+	//在图中寻找v和w之间的弧
+	bool Find_Arc(Adj_List<K, T>& list, int v, int w)
+	{
+		//空图或者v不合法或者w不合法
+		if (list.vertices.size() == 0 || v < 0 || v >= list.vertices.size() || w < 0 || w >= list.vertices.size())
+		{
+			return false;
+		}
+
+		std::shared_ptr<ArcNode<T>> arc = list.vertices[v].firstarc;
+
+		while (arc && arc->adjvex != w)
+		{
+			arc = arc->nextarc;
+		}
+
+		//找到
+		if (arc)
+		{
+			return true;
+		}
+
+		return false;
+
+
+	}
+
+	//在G中增添弧<v, w>, 若G是无向图，则还增添对称弧<w, v>。
+	void InSertArc(Adj_List<K, T>& list, int v, int w)
+	{
+		//空图或者v不合法或者w不合法
+		if (list.vertices.size() == 0 || v < 0 || v >= list.vertices.size() || w < 0 || w >= list.vertices.size())
+		{
+			return;
+		}
+
+		auto add = [](std::shared_ptr<ArcNode<T>> arc, int k) -> void {
+			//遍历到最后
+			while (arc->nextarc)
+			{
+				arc = arc->nextarc;
+			}
+
+			std::shared_ptr<ArcNode<T>> p(new ArcNode<T>(k));
+
+			//加入
+			arc->nextarc = p;
+
+		};
+
+		//图中无此弧
+		if (!Find_Arc(list, v, w))
+		{
+			std::shared_ptr<ArcNode<T>> p = list.vertices[v].firstarc;
+
+			add(p, w);
+
+			//如果是无向图，则增加对称边
+			if (!list.is_direct)
+			{
+				p = list.vertices[w].firstarc;
+				add(p, v);
+			}
+		}
+		return;
+	}
+
+	//深度优先搜索（DFS）算法,并对节点进行处理,vis保存是否访问
+	void dfs(int u, std::vector<bool>& vis, Adj_List<K,T>& list, std::function<void(VexNode<K, T>&)> address = [](VexNode<K, T>& node)->void {std::cout << node.data; })
+	{
+		//访问过或者u不合法
+		if (u < 0 || u >= vis.size() || vis[u])
+		{
+			return;
+		}
+
+		//标记已访问
+		vis[u] = true;
+
+		address(list.vertices[u]);
+
+		//递归搜索
+		std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
+
+		while (p)
+		{
+			dfs(p->adjvex, vis, list, address);
+
+			p = p->nextarc;
+		}
+
+	}
+
+	void do_dfs(Adj_List& list, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	{
+		//空图
+		if (list.vertices.empty())
+		{
+			return;
+		}
+
+		//初始化vis
+		std::vector<bool> vis(list.vertices.size(), false);
+
+		// 遍历所有节点，确保不遗漏任何不连通的部分
+		for (int i = 0; i < list.vertices.size(); i++)
+		{
+			dfs(i, vis, list, address);
+		}
+	}
+
+
 };

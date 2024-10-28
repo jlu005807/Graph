@@ -1,7 +1,7 @@
 ﻿  main.cpp
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(167,11): warning C4305: “return”: 从“int”到“bool”截断
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(193,11): warning C4305: “return”: 从“int”到“bool”截断
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(219,11): warning C4305: “return”: 从“int”到“bool”截断
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(340,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(421,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(170,11): warning C4305: “return”: 从“int”到“bool”截断
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(196,11): warning C4305: “return”: 从“int”到“bool”截断
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(222,11): warning C4305: “return”: 从“int”到“bool”截断
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(343,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(424,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
   Graph.vcxproj -> D:\Visual Studio 2022\source\repos\Graph\x64\Debug\Graph.exe

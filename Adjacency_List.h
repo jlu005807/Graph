@@ -2,6 +2,7 @@
 #include<iostream>
 #include<memory>//便于使用shared_ptr
 #include<vector>
+#include<queue>
 #include<functional>
 
 //邻接表(Adjacency List) 是图的一种链式存储结构
@@ -27,7 +28,7 @@ public:
 
 	ArcNode() = default;
 
-	ArcNode(int vex) :adjvex(vex), nextarc(nullptr){ }
+	ArcNode(int vex) :adjvex(vex),info(1),nextarc(nullptr){ }
 
 	ArcNode(int vex,T info) :adjvex(vex),info(info), nextarc(nullptr) { }
 
@@ -433,5 +434,238 @@ public:
 		}
 	}
 
+
+	//广度优先搜索（BFS）算法,并对节点进行处理,vis保存是否访问
+	void bfs(int start, std::vector<bool>& vis, Adj_List& list, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	{
+		//已经访问过或者start不合法
+		if (vis[start] || start < 0 || start >= vis.size())return;
+
+		std::queue<int> q;//存放当前连通分支节点，并要着start节点一圈圈增加
+
+		vis[start] = true;//标记初始点访问
+
+		q.push(start);//将起始节点入队
+
+		//队列不为空，即当前连通分支还有为访问的节点
+		while (!q.empty())
+		{
+			int u = q.front(); // 获取队列前端的节点
+
+			q.pop();           // 出队
+
+			address(u);       // 处理当前节点
+
+			// 遍历当前顶点，找到所有邻接并且未访问的节点加入队列
+			std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
+
+			while (p)
+			{
+				vis[p->adjvex] = true;
+				q.push(p->adjvex);
+				p = p->nextarc;
+			}
+		}
+	}
+
+	// 执行BFS遍历
+	void do_bfs(Adj_List& list, std::function<void(int&)> address = [](int& u)->void { std::cout << u; }) {
+		// 空图
+		if (list.vertices.empty()) return;
+
+		std::vector<bool> vis(list.vertices.size(), false); // 创建访问标志
+
+		// 遍历所有节点，确保不遗漏任何不连通的部分
+		for (int i = 0; i < list.vertices.size(); i++)
+		{
+			bfs(i, vis, list, address); // 从未访问的节点开始BFS
+		}
+	}
+
+	//生成拓扑排序
+	std::vector<int> TopologicalSort(Adj_List& list)
+	{
+		// 无向图无法进行拓扑排序
+		if (!list.is_direct)
+		{
+			std::cerr << "Graph doesn't have direction, topological sorting not possible." << std::endl;
+			return {};
+		}
+
+		int number = list.vertices.size();
+
+		std::vector<int> Topo;//记录拓扑排序
+
+		std::queue<int> zero_in_degree;//记录入度为0的顶点
+
+		//存放各个顶点的入度
+		std::vector<int> indegree(number, 0);
+
+		//计算各个点的入度
+		for (int u = 0; u < number; u++)
+		{
+			std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
+
+			while (p)
+			{
+				indegree[p->adjvex]++;
+
+				p = p->nextarc;
+			}
+
+		}
+
+		//将入度为0的点放入zero_in_degree中
+		for (int i = 0; i < number; i++)
+		{
+			if (indegree[i] == 0)
+			{
+				zero_in_degree.push(i);
+			}
+		}
+
+		//Kahn算法
+		while (!zero_in_degree.empty())
+		{
+			//取出一个节点处理
+			int u = zero_in_degree.front();
+			zero_in_degree.pop();
+
+			//放入Topo
+			Topo.push_back(u);
+
+			//删除相应的边,在indegree中逻辑删除
+			std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
+
+			while (p)
+			{
+				//相应顶点入度减一
+				indegree[p->adjvex]--;
+
+				//如果为0放入zero_in_degree
+				if (indegree[i] == 0)
+				{
+					zero_in_degree.push(i);
+				}
+
+				p = p->nextvarc;
+			}
+
+		}
+
+		//检查是否存在环
+		if (Topo.size() != number)
+		{
+			std::cerr << "Graph has a cycle, topological sorting not possible." << std::endl;
+			return {};
+		}
+
+		//返回Topo
+		return Topo;
+	}
+
+	//关键路径
+	std::vector<int> CriticalPath(Adj_List list)
+	{
+		// 无向图无法进行拓扑排序
+		if (!list.is_direct)
+		{
+			std::cerr << "Graph doesn't have direction, CriticalPath not possible." << std::endl;
+			return {};
+		}
+
+
+		int number = list.vertices.size();
+
+		//拓扑排序
+		std::vector<int> Topo = TopologicalSort(adj);
+
+		//有环
+		if (Topo.empty())
+		{
+			std::cout << "图中存在环，无法计算关键路径。" << std::endl;
+			return {};
+		}
+
+		//边的数量
+		int edge_num = 0;
+
+		//初始化各顶点的最早发生时间（VE）,对于开始点即拓扑排序第一个点的VT为0
+		std::vector<int> VE(number, 0);
+
+		//计算各个顶点的VE
+		for (int u = 0; u < Topo.size(); u++)
+		{
+			std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
+			//遍历u相连的边
+			while(p)
+			{
+				int v = p->adjvex;
+
+				VE[v] = std::max(VE[v], VE[u] + p->info);
+				edge_num++;
+
+				p = p->nextarc;
+			}
+		}
+
+		//初始化各节点的最晚发生时间（VL）,对于结束点即拓扑排序最后一个点的LT为VE[number - 1]
+		std::vector<int> VL(number, VE[number - 1]);
+
+
+		//逆拓扑排序计算各个顶点VL
+		for (auto it = Topo.rbegin(); it != Topo.rend(); it++)
+		{
+			int u = *it;
+
+			std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
+
+			//遍历u相连的边
+			while (p)
+			{
+				int v = p->adjvex;
+
+				VL[u] = std::min(VL[u], VL[i] - adj.graph[u][i]);
+
+				p = p->nextarc;
+			}
+	
+		}
+
+		//计算各个弧即活动的最早开始时间ET，即各个弧起始点即弧尾的VE
+		//计算弧i即活动的最晚开始时间LT，即各个弧结束点即弧头的VL-weights[i]
+		//同时计算关键路径的节点（此时Path内为顶点而非弧）
+		std::vector<int> critical_adjpath;
+
+		for (int u = 0; u < Topo.size(); u++)
+		{
+			std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
+			while(p)
+			{
+				//更新当前节点的为弧尾的活动的ET和LT
+				int v = p->adjvex;
+
+				int ET = VE[u];
+				int LT = VL[v] - p->info;
+				//判断是否为关键路径
+				if (ET == LT)
+				{
+				//如果为空,放入首尾
+					if (critical_adjpath.empty())
+					{
+						critical_adjpath.push_back(u);
+						critical_adjpath.push_back(v);
+					}
+					else if (critical_adjpath.back() == u)//判断首尾是否相接
+					{
+							critical_adjpath.push_back(v);//只放入尾节点
+					}
+				}
+			}
+		}
+			
+	    std::cout << "项目的最早完成时间为：" << VE[number - 1] << std::endl;
+		return critical_adjpath;  // 返回关键路径
+	}
 
 };

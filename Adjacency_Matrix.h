@@ -504,7 +504,5 @@ public:
 
 		std::cout << "项目的最早完成时间为：" << VE[number - 1] << std::endl;
 		return critical_adjpath;  // 返回关键路径
-
-
 	}
 };

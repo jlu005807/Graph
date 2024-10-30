@@ -94,7 +94,7 @@ public:
 		auto it = std::find(graph.begin(), graph.end(), newedge);
 
 		//ÒÑ´æÔÚ
-		if (it == graph.end())
+		if (it != graph.end())
 		{
 			return;
 		}

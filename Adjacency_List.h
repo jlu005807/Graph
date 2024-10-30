@@ -47,11 +47,9 @@ public:
 	//指向第一条依附该顶点的边的指针
 	std::shared_ptr<ArcNode<T>> firstarc;
 
-	VexNode() = default;
-
 	VexNode(std::shared_ptr<ArcNode<T>> arc=nullptr):firstarc(arc){ }
 
-	VexNode(K data, std::shared_ptr<ArcNode<T>> arc = nullptr) :data(data),firstarc(arc) { }
+	VexNode(K data, std::shared_ptr<ArcNode<T>> arc) :data(data),firstarc(arc) { }
 
 	//加入边
 	void Add_Arc(std::shared_ptr<ArcNode<T>> arc)
@@ -92,7 +90,7 @@ public:
 	}
 
 	//需要data的顶点
-	Adj_List(int vexnum, int arcnum, bool direct = false,K datas[]) :arcnum(arcnum), is_direct(direct)
+	Adj_List(int vexnum, int arcnum, K datas[],bool direct = false) :arcnum(arcnum), is_direct(direct)
 	{
 		//初始化arcnum
 		vertices.resize(vexnum);
@@ -124,7 +122,7 @@ public:
 			int v = edge[i][1];
 
 			//构建arc
-			std::shared_ptr<ArcNode<T>> arc(new ArcNode(v));
+			std::shared_ptr<ArcNode<T>> arc(new ArcNode<T>(v));
 
 			list.vertices[u].Add_Arc(arc);
 
@@ -152,7 +150,7 @@ public:
 			int v = edge[i][1];
 
 			//构建arc
-			std::shared_ptr<ArcNode<T>> arc(new ArcNode(v,weights[i]));
+			std::shared_ptr<ArcNode<T>> arc(new ArcNode<T>(v,weights[i]));
 
 			list.vertices[u].Add_Arc(arc);
 
@@ -203,16 +201,16 @@ public:
 		//空图或者v不合法
 		if (list.vertices.size() == 0 || v < 0 || v >= list.vertices.size())
 		{
-			return -1；
+			return -1;
 		}
 
 		//没有邻接点
-		if (!list.vertices[v].firsrarc)
+		if (!list.vertices[v].firstarc)
 		{
 			return -1;
 		}
 
-		return list.vertices[v].firsrarc.adjvex;
+		return list.vertices[v].firstarc.adjvex;
 	}
 
 	//返回v的（相对千w的）下一个邻接顶点。若w是v的最后一个邻接点，则返回 “空”。
@@ -242,7 +240,7 @@ public:
 	}
 
 	//在图G中增添新顶点v。
-	InSertVex(Adj_List<K,T>& list,VexNode<K,T> newvex)
+	void InSertVex(Adj_List<K,T>& list,VexNode<K,T> newvex)
 	{
 		auto it = std::find(list.vertices.begin(), list.vertices.end(), newvex);
 
@@ -259,12 +257,12 @@ public:
 	}
 
 	//删除G中顶点v及其相关的弧。
-	DeleteVex(Adj_List<K, T>& list, int v)
+	bool DeleteVex(Adj_List<K, T>& list, int v)
 	{
 		//空图或者v不合法
 		if (list.vertices.size() == 0 || v < 0 || v >= list.vertices.size())
 		{
-			return -1;
+			return false;
 		}
 
 		auto it = list.vertices.begin();
@@ -281,6 +279,8 @@ public:
 		{
 			DeleteArc(list, v, arc->adjvex);
 		}
+
+		return true;
 	}
 
 	//在G中删除弧<v, w>, 若G是无向图，则还删除对称弧<w, v>。
@@ -293,6 +293,7 @@ public:
 		}
 
 		auto free = [&](std::shared_ptr<ArcNode<T>> arc, int k)->void {
+			
 			while (arc->nextarc && arc->nextarc->adjvex != k)
 			{
 				arc = arc->nextarc;
@@ -313,12 +314,12 @@ public:
 
 		};
 
-		free(list.vertices[v], w);
+		free(list.vertices[v].firstarc, w);
 
 		//如果是无向图，删除对称边
 		if (!list.is_direct)
 		{
-			free(list.vertices[w], v);
+			free(list.vertices[w].firstarc, v);
 		}
 
 	}
@@ -416,7 +417,7 @@ public:
 
 	}
 
-	void do_dfs(Adj_List& list, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void do_dfs(Adj_List<K,T>& list, std::function<void(VexNode<K, T>&)> address = [](VexNode<K, T>& node)->void {std::cout << node.data; })
 	{
 		//空图
 		if (list.vertices.empty())
@@ -436,7 +437,7 @@ public:
 
 
 	//广度优先搜索（BFS）算法,并对节点进行处理,vis保存是否访问
-	void bfs(int start, std::vector<bool>& vis, Adj_List& list, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void bfs(int start, std::vector<bool>& vis, Adj_List<K,T>& list, std::function<void(VexNode<K, T>&)> address = [](VexNode<K, T>& node)->void {std::cout << node.data; })
 	{
 		//已经访问过或者start不合法
 		if (vis[start] || start < 0 || start >= vis.size())return;
@@ -454,22 +455,28 @@ public:
 
 			q.pop();           // 出队
 
-			address(u);       // 处理当前节点
+			address(list.vertices[u]);       // 处理当前节点
 
 			// 遍历当前顶点，找到所有邻接并且未访问的节点加入队列
 			std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
 
 			while (p)
 			{
-				vis[p->adjvex] = true;
-				q.push(p->adjvex);
+				//未访问
+				if(!vis[p->adjvex])
+				{
+					vis[p->adjvex] = true;
+					q.push(p->adjvex);
+				}
+
 				p = p->nextarc;
 			}
 		}
 	}
 
 	// 执行BFS遍历
-	void do_bfs(Adj_List& list, std::function<void(int&)> address = [](int& u)->void { std::cout << u; }) {
+	void do_bfs(Adj_List<K,T>& list, std::function<void(VexNode<K, T>&)> address = [](VexNode<K, T>& node)->void {std::cout << node.data; }) 
+	{
 		// 空图
 		if (list.vertices.empty()) return;
 
@@ -483,7 +490,7 @@ public:
 	}
 
 	//生成拓扑排序
-	std::vector<int> TopologicalSort(Adj_List& list)
+	std::vector<int> TopologicalSort(Adj_List<K,T>& list)
 	{
 		// 无向图无法进行拓扑排序
 		if (!list.is_direct)
@@ -543,12 +550,12 @@ public:
 				indegree[p->adjvex]--;
 
 				//如果为0放入zero_in_degree
-				if (indegree[i] == 0)
+				if (indegree[p->adjvex] == 0)
 				{
-					zero_in_degree.push(i);
+					zero_in_degree.push(p->adjvex);
 				}
 
-				p = p->nextvarc;
+				p = p->nextarc;
 			}
 
 		}
@@ -565,7 +572,7 @@ public:
 	}
 
 	//关键路径
-	std::vector<int> CriticalPath(Adj_List list)
+	std::vector<int> CriticalPath(Adj_List<K,T> list)
 	{
 		// 无向图无法进行拓扑排序
 		if (!list.is_direct)
@@ -578,7 +585,7 @@ public:
 		int number = list.vertices.size();
 
 		//拓扑排序
-		std::vector<int> Topo = TopologicalSort(adj);
+		std::vector<int> Topo = TopologicalSort(list);
 
 		//有环
 		if (Topo.empty())
@@ -586,9 +593,6 @@ public:
 			std::cout << "图中存在环，无法计算关键路径。" << std::endl;
 			return {};
 		}
-
-		//边的数量
-		int edge_num = 0;
 
 		//初始化各顶点的最早发生时间（VE）,对于开始点即拓扑排序第一个点的VT为0
 		std::vector<int> VE(number, 0);
@@ -603,8 +607,7 @@ public:
 				int v = p->adjvex;
 
 				VE[v] = std::max(VE[v], VE[u] + p->info);
-				edge_num++;
-
+			
 				p = p->nextarc;
 			}
 		}
@@ -620,33 +623,34 @@ public:
 
 			std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
 
-			//遍历u相连的边
+			//遍历和u相连的边
 			while (p)
 			{
 				int v = p->adjvex;
 
-				VL[u] = std::min(VL[u], VL[i] - adj.graph[u][i]);
+				VL[u] = std::min(VL[u], VL[v] - p->info);
 
 				p = p->nextarc;
 			}
 	
 		}
 
-		//计算各个弧即活动的最早开始时间ET，即各个弧起始点即弧尾的VE
-		//计算弧i即活动的最晚开始时间LT，即各个弧结束点即弧头的VL-weights[i]
 		//同时计算关键路径的节点（此时Path内为顶点而非弧）
 		std::vector<int> critical_adjpath;
 
 		for (int u = 0; u < Topo.size(); u++)
 		{
 			std::shared_ptr<ArcNode<T>> p = list.vertices[u].firstarc;
+			
 			while(p)
 			{
 				//更新当前节点的为弧尾的活动的ET和LT
 				int v = p->adjvex;
 
 				int ET = VE[u];
+
 				int LT = VL[v] - p->info;
+
 				//判断是否为关键路径
 				if (ET == LT)
 				{
@@ -661,11 +665,27 @@ public:
 							critical_adjpath.push_back(v);//只放入尾节点
 					}
 				}
+
+				//后移
+				p = p->nextarc;
 			}
 		}
 			
 	    std::cout << "项目的最早完成时间为：" << VE[number - 1] << std::endl;
 		return critical_adjpath;  // 返回关键路径
+	}
+
+	void PrintGraph(const Adj_List<K,T>& list) {
+		std::cout << "Graph adjacency list representation:" << std::endl;
+		for (const auto& node : list.vertices) {
+			std::cout << "Node " << node.data << ": ";
+			auto edge = node.firstarc;
+			while (edge) {
+				std::cout << "-> (" << edge->adjvex << ", weight: " << edge->info << ") ";
+				edge = edge->nextarc;
+			}
+			std::cout << std::endl;
+		}
 	}
 
 };

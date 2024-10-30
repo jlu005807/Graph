@@ -167,7 +167,7 @@ public:
 		//空图
 		if (adj.graph.empty())
 		{
-			return -1;
+			return false;
 		}
 
 		//不存在这样的点
@@ -193,7 +193,7 @@ public:
 		//空图
 		if (adj.graph.empty())
 		{
-			return -1;
+			return false;
 		}
 
 		//不存在这样的点
@@ -219,7 +219,7 @@ public:
 		//空图
 		if (adj.graph.empty())
 		{
-			return -1;
+			return false;
 		}
 
 		//不存在这样的点

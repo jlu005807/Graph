@@ -24,6 +24,12 @@
     <ClInclude Include="Adjacency_List.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Orthogonal_List.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Adjacency_Multilist.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

@@ -228,9 +228,9 @@ public:
 		while (arc->nextarc && arc->adjvex != w)
 			arc = arc->nextarc;
 
-		if (arc->nextarc)
+		if (arc)
 		{
-			return arc->nextarc->adjvex;
+			return arc->adjvex;
 		}
 		else
 		{
@@ -347,8 +347,6 @@ public:
 		}
 
 		return false;
-
-
 	}
 
 	//在G中增添弧<v, w>, 若G是无向图，则还增添对称弧<w, v>。

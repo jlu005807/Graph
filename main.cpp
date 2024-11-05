@@ -1,6 +1,7 @@
 #include "Edge.h"
 #include"Adjacency_Matrix.h"
 #include"Adjacency_List.h"
+#include"Orthogonal_List.h"
 
 
 void TestEdge()
@@ -202,6 +203,58 @@ void TestAdjList() {
     std::cout << std::endl;
 }
 
+//测试十字链表
+void TestOLGraph()
+{
+    // 创建管理类实例
+    OLGraph_manager<int, int> manager;
+
+    // 定义图的顶点数和边数
+    int vertices = 10;  // 顶点数为10
+    const int numEdges = 11;  // 边数为11
+
+    // 定义边的信息
+    int edges[numEdges][2] = {
+        {0, 1}, {0, 2}, {1, 3}, {1, 4},
+        {2, 5}, {3, 6}, {4, 6}, {5, 7},
+        {6, 8}, {7, 9}, {8, 9}
+    };
+
+    // 创建图
+    OLGraph<int, int> graph = manager.CreateGraph(vertices, numEdges, edges);
+
+    // 测试DFS遍历
+    std::cout << "DFS遍历结果: ";
+    manager.do_dfs(graph, [](VexBox<int, int>& node) { std::cout << node.data << " "; });
+    std::cout << std::endl;
+
+    // 测试BFS遍历
+    std::cout << "BFS遍历结果: ";
+    manager.do_bfs(graph, [](VexBox<int, int>& node) { std::cout << node.data << " "; });
+    std::cout << std::endl;
+
+    // 插入一条新边 (2, 8)
+    manager.InSertArc(graph, 2, 8);
+    std::cout << "插入边 (2, 8) 后的BFS遍历结果: ";
+    manager.do_bfs(graph, [](VexBox<int, int>& node) { std::cout << node.data << " "; });
+    std::cout << std::endl;
+
+    // 删除边 (1, 4)
+    manager.DeleteArc(graph, 1, 4);
+    std::cout << "删除边 (1, 4) 后的DFS遍历结果: ";
+    manager.do_dfs(graph, [](VexBox<int, int>& node) { std::cout << node.data << " "; });
+    std::cout << std::endl;
+
+    // 查找是否存在边 (6, 8)
+    bool found = manager.Find_Arc(graph, 6, 8);
+    std::cout << "边 (6, 8) " << (found ? "存在" : "不存在") << std::endl;
+
+    // 销毁图
+    manager.DestroyGraph(graph);
+    std::cout << "图已销毁" << std::endl;
+
+    return;
+}
 
 
 // 主函数测试代码
@@ -216,6 +269,10 @@ int main() {
     system("Pause");
 
     TestAdjList();
+
+    system("Pause");
+
+    TestOLGraph();
 
     system("Pause");
 

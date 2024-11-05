@@ -62,7 +62,7 @@ public:
 	void Add_outArc(std::shared_ptr<ArcBox<T>> arc)
 	{
 		//插入arc到firstarc
-		std::shared_ptr<ArcNode<T>> p = firstout;
+		std::shared_ptr<ArcBox<T>> p = firstout;
 
 		firstout = arc;
 
@@ -73,7 +73,7 @@ public:
 	void Add_inArc(std::shared_ptr<ArcBox<T>> arc)
 	{
 		//插入arc到firstarc
-		std::shared_ptr<ArcNode<T>> p = firstin;
+		std::shared_ptr<ArcBox<T>> p = firstin;
 
 		firstin = arc;
 
@@ -125,7 +125,7 @@ public:
 	OLGraph<K, T> CreateGraph(int n, int m, int edge[][2])
 	{
 		//初始化
-		Adj_List<K, T> list(n);
+		OLGraph<K, T> list(n);
 
 		//加入边的信息，此处使用头插法不考虑edge中的位置在List中的稳定性
 		for (int i = 0; i < m; i++)
@@ -140,7 +140,7 @@ public:
 			list.vertices[u].Add_outArc(arc);
 
 
-			list.vertices[v].Add_inArc(arcn);
+			list.vertices[v].Add_inArc(arc);
 		}
 
 		return list;
@@ -150,7 +150,7 @@ public:
 	OLGraph<K, T> CreateGraph(int n, int m, int edge[][2], std::vector<int> weights)
 	{
 		//初始化
-		Adj_List<K, T> list(n);
+		OLGraph<K, T> list(n);
 
 		//加入边的信息，此处使用头插法不考虑edge中的位置在List中的稳定性
 		for (int i = 0; i < m; i++)
@@ -186,13 +186,13 @@ public:
 			std::shared_ptr<ArcBox<T>> arc = vex.firstout;
 
 			//遍历释放
-			while (vex.tlink!= nullptr)
+			while (arc!= nullptr)
 			{
-				std::shared_ptr<ArcBox<T>> arc = vex.tlink;
+				std::shared_ptr<ArcBox<T>> p = arc;
 
-				vex.tlink = arc->nextarc;
+				arc = arc->tlink;
 
-				arc.reset();
+				p.reset();
 			}
 		}
 
@@ -282,7 +282,7 @@ public:
 
 			while (arc->hlink && arc->hlink->tailvext != k)
 			{
-				arc = arc->=hlink;
+				arc = arc->hlink;
 			}
 
 			//找到弧
@@ -340,28 +340,28 @@ public:
 			return;
 		}
 
-		auto addout = [](std::shared_ptr<ArcBox<T>> arc, int k) -> void {
+		auto addout = [](std::shared_ptr<ArcBox<T>> arc, int v,int w) -> void {
 			//遍历到最后
 			while (arc->tlink)
 			{
 				arc = arc->tlink;
 			}
 
-			std::shared_ptr<ArcBox<T>> p(new ArcBox<T>(k));
+			std::shared_ptr<ArcBox<T>> p(new ArcBox<T>(v,w));
 
 			//加入
 			arc->tlink = p;
 
 		};
 
-		auto addin = [](std::shared_ptr<ArcBox<T>> arc, int k) -> void {
+		auto addin = [](std::shared_ptr<ArcBox<T>> arc, int v, int w) -> void {
 			//遍历到最后
 			while (arc->hlink)
 			{
 				arc = arc->hlink;
 			}
 
-			std::shared_ptr<ArcBox<T>> p(new ArcBox<T>(k));
+			std::shared_ptr<ArcBox<T>> p(new ArcBox<T>(w, v));
 
 			//加入
 			arc->hlink = p;
@@ -371,13 +371,13 @@ public:
 		//图中无此弧
 		if (!Find_Arc(graph, v, w))
 		{
-			std::shared_ptr<ArcBox<T>> p = list.vertices[v].firstout;
+			std::shared_ptr<ArcBox<T>> p = graph.vertices[v].firstout;
 
-			std::shared_ptr<ArcBox<T>> q = list.vertices[w].firstin;
+			std::shared_ptr<ArcBox<T>> q = graph.vertices[w].firstin;
 
-			addout(p, w);
+			addout(p, v,w);
 
-			addin(q, v);
+			addin(q, w,v);
 		}
 
 		return;

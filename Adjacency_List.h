@@ -228,9 +228,9 @@ public:
 		while (arc->nextarc && arc->adjvex != w)
 			arc = arc->nextarc;
 
-		if (arc)
+		if (arc->nextarc)
 		{
-			return arc->adjvex;
+			return arc->nextarc->adjvex;
 		}
 		else
 		{
@@ -431,6 +431,59 @@ public:
 		{
 			dfs(i, vis, list, address);
 		}
+	}
+
+	//深度优先搜索（DFS）算法的非递归形式，类似于广度优先，但这里使用栈
+	void dfs_non_recursive(int start, std::vector<bool>& vis, Adj_List<K, T>& list, std::function<void(VexNode<K, T>&)> address = [](VexNode<K, T>& node)->void {std::cout << node.data; })
+	{
+		//已经访问过或者start不合法
+		if (vis[start] || start < 0 || start >= vis.size())return;
+
+		std::vector<int> q;//存放当前连通分支节点
+
+		q.push_back(start);//将起始节点入栈
+
+		vis[start] = true;// 标记为已访问
+
+		//栈不为空，即当前连通分支还有未访问的节点
+		while (!q.empty())
+		{
+			int u = q.back(); // 获取栈顶的节点
+
+			q.pop_back();           // 出栈
+
+			address(u);       // 处理当前节点
+
+			// 遍历当前顶点，找到所有邻接并且未访问的节点加入队列
+			auto p = list.vertices[u].firstarc;
+			while (p)
+			{
+				vis[p->adjvex] = true;
+				q.push_back(p->adjvex);
+
+				p = p->nextarc;
+			}
+
+		}
+	}
+
+	//图深度优先算法的非递归
+	void do_dfs_non_recursive(Adj_List<K, T>& list, std::function<void(VexNode<K, T>&)> address = [](VexNode<K, T>& node)->void {std::cout << node.data; })
+	{
+		int number = list.vertices.size();
+
+		//空图
+		if (number <= 0)
+			return;
+
+		std::vector<bool> vis(number, false);
+
+		// 遍历所有节点，确保不遗漏任何不连通的部分
+		for (int i = 0; i < number; i++)
+		{
+			dfs_non_recursive(i, vis, list, address);
+		}
+
 	}
 
 
@@ -673,6 +726,110 @@ public:
 		return critical_adjpath;  // 返回关键路径
 	}
 
+	//找到无权最短路，图中所有边权值为1，求点v到其他各个点的最短路经和最短路径的长度
+	//path[i]记录从 v 到 i 的最短路径上顶点i的前驱结点
+	//dist[i]记录从 v 到 i 的最短路径长度
+	void ShortestPath(const Adj_List<K, T>& list, int v, std::vector<int>& dist, std::vector<int>& path)
+	{
+		//path和dist初始化由上层完成
+
+		//创建一个队列
+		std::queue<int> Q;
+		Q.push(v); //将开始结点入队
+
+		//自身路径为0
+		dist[v] = 0;
+
+		//求v到其他各个顶点的最短路径，类似于图的BFS
+		while (!Q.empty())
+		{
+			//处理队头顶点
+			int u = Q.front();
+			Q.pop();
+
+			auto p = list.vertices[u].firstarc;
+			while (p)
+			{
+				int k = p->adjvex; //记录当前邻接点
+
+				//dist[k]=-1表示未访问
+				if (dist[k] == -1)
+				{
+					//将u未访问的邻接点k入队
+					Q.push(k);
+
+					//距离增加为u的距离加一
+					dist[k] = dist[u] + 1;
+
+					//更新k的在最短路的前驱结点
+					path[k] = u;
+				}
+
+				//处理下一个邻接点
+				p = p->nextarc;
+			}
+		}
+	}
+
+	// 输出从 v 到所有其他点的最短路径和路径长度
+	void PrintShortestPath(int v, const std::vector<int>& dist, const std::vector<int>& path)
+	{
+		int n = dist.size();
+
+		for (int i = 0; i < n; ++i)
+		{
+			if (i == v) continue;  // 跳过起点自身
+
+			if (dist[i] == -1)
+			{
+				// 如果 dist[i] 仍为 -1，说明从 v 到 i 不可达
+				std::cout << "No path from " << v << " to " << i << std::endl;
+			}
+			else
+			{
+				// 输出路径长度
+				std::cout << "Shortest path length from " << v << " to " << i << ": " << dist[i] << std::endl;
+
+				// 输出路径
+				std::cout << "Path: ";
+				std::vector<int> path_vec;
+				for (int u = i; u != -1; u = path[u])
+				{
+					path_vec.push_back(u);
+				}
+				std::reverse(path_vec.begin(), path_vec.end());
+
+				for (size_t j = 0; j < path_vec.size(); ++j)
+				{
+					std::cout << path_vec[j];
+					if (j < path_vec.size() - 1)
+						std::cout << " -> ";
+				}
+				std::cout << std::endl;
+			}
+		}
+	}
+
+	//ShortestPath的上层，负责创建，初始化并输出dist和path
+	void SearchShortestPath(const Adj_List<K, T>& list, int v)
+	{
+		std::vector<int> dist, path;
+
+		int number = list.vertices.size();
+
+		//初始化dist和path
+		dist.resize(number, -1);
+		path.resize(number, -1);
+
+		ShortestPath(list, v, dist, path);
+
+		std::cout << "无权最短路:" << std::endl;
+
+		PrintShortestPath(v, dist, path);
+
+		return;
+	}
+
 	void PrintGraph(const Adj_List<K,T>& list) {
 		std::cout << "Graph adjacency list representation:" << std::endl;
 		for (const auto& node : list.vertices) {
@@ -684,6 +841,80 @@ public:
 			}
 			std::cout << std::endl;
 		}
+	}
+
+	//正权最短路径,即图的权值为正实数，求点v到其他各个点的最短路经和最短路径的长度
+	//可以用于无权最短路径，即权值为1;
+	//找局部最优路，即在已知距离的其他点里找最小距离的点组成局部最优路，再由此点更新其他点的最短距离
+	void Dijkstra_ShortestPath(const Adj_List<K, T>& list, int v, std::vector<bool> vis,std::vector<int>& dist, std::vector<int>& path)
+	{
+		//path和dist,vis初始化由上层完成
+		
+		//自身路径为0
+		dist[v] = 0;
+
+		//标记访问
+		vis[v] = true;
+
+		auto p = list.vertices[i].firstarc;
+
+		//求v到其他各个顶点的最短路径
+		//访问除了起始点以外所有点
+		for (int i = 0; i < list.vertices.size() - 1; i++)
+		{
+			//从目前最小路径的点出发更新未访问点的最小路径
+			while (p)
+			{
+				int k = p->adjvex;
+
+				//未访问过并且有更小路径
+				if (!vis[k] && dist[u] + p->info < dist[k])
+				{
+					//更新最短路径和前驱结点
+					dist[k] = dist[u] + p->info;
+					path[k] = u;
+				}
+
+				p = p->nextarc;
+			}
+
+			//寻找当前未访问过并且有最小路径的点
+			int shortest = INT_MAX;
+
+			for (int i = 0; i < list.vertices.size(); i++)
+			{
+				if (dist[i] < shortest && !vis[i])
+				{
+					u = i;
+					shortest = dist[i];
+				}
+			}
+
+			//访问新顶点和p
+			vis[u] = true;
+			p = list.vertices[u]->firstarc;
+		}
+	}
+
+	//Dijkstra_ShortestPath的上层，负责创建，初始化并输出dist和path
+	void Dijkstra_SearchShortestPath(const Adj_List<K, T>& list, int v)
+	{
+		std::vector<int> dist, path, vis;
+
+		int number = list.vertices.size();
+
+		//初始化dist和path,vis
+		dist.resize(number, INT_MAX);//无边为无穷大
+		path.resize(number, -1);
+		vis.resize(number, false);
+
+		Dijkstra_ShortestPath(list, v, vis,dist, path);
+
+		std::cout << "无权最短路:" << std::endl;
+
+		PrintShortestPath(v, dist, path);
+
+		return;
 	}
 
 };

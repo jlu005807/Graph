@@ -282,6 +282,59 @@ public:
 		}
 	}
 
+	//深度优先搜索（DFS）算法的非递归形式，类似于广度优先，但这里使用栈
+	void dfs_non_recursive(int start, std::vector<bool>& vis, Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	{
+		//已经访问过或者start不合法
+		if (vis[start] || start < 0 || start >= vis.size())return;
+
+		std::vector<int> q;//存放当前连通分支节点
+
+		q.push_back(start);//将起始节点入栈
+
+		vis[start] = true;// 标记为已访问
+
+		//栈不为空，即当前连通分支还有未访问的节点
+		while (!q.empty())
+		{
+			int u = q.back(); // 获取栈顶的节点
+
+			q.pop_back();           // 出栈
+
+			address(u);       // 处理当前节点
+
+			// 遍历当前顶点，找到所有邻接并且未访问的节点加入队列
+			for (int i = 0; i < adj.graph.size(); i++)
+			{
+				if (adj.graph[u][i] != INT_MAX && !vis[i])
+				{
+					vis[i] = true;// 标记为已访问
+					q.push_back(i);     // 将邻接节点入栈
+				}
+			}
+			
+		}
+	}
+
+	//图深度优先算法的非递归
+	void do_dfs_non_recursive(Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	{
+		int number = adj.graph.size();
+
+		//空图
+		if (number <= 0)
+			return;
+
+		std::vector<bool> vis(number, false);
+
+		// 遍历所有节点，确保不遗漏任何不连通的部分
+		for (int i = 0; i < number; i++)
+		{
+			dfs_non_recursive(i, vis, adj, address);
+		}
+
+	}
+
 
 	//广度优先搜索（BFS）算法,并对节点进行处理,vis保存是否访问
 	void bfs(int start, std::vector<bool>& vis, Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
@@ -304,7 +357,7 @@ public:
 
 			address(u);       // 处理当前节点
 
-			// 遍历图，找到所有邻接并且未访问的节点加入队列
+			// 遍历当前顶点，找到所有邻接并且未访问的节点加入队列
 			for (int i=0;i<adj.graph.size();i++)
 			{
 				if (adj.graph[u][i] != INT_MAX && !vis[i])
@@ -411,7 +464,7 @@ public:
 	}
 
 	//关键路径
-	std::vector<int> CriticalPath(Adj_Matrix adj)
+	std::vector<int> CriticalPath(const Adj_Matrix& adj)
 	{
 		// 无向图无法进行拓扑排序
 		if (!adj.is_direct)
@@ -504,5 +557,127 @@ public:
 
 		std::cout << "项目的最早完成时间为：" << VE[number - 1] << std::endl;
 		return critical_adjpath;  // 返回关键路径
+	}
+
+	//找到无权最短路，图中所有边权值为1，求点v到其他各个点的最短路经和最短路径的长度
+	//path[i]记录从 v 到 i 的最短路径上顶点i的前驱结点
+	//dist[i]记录从 v 到 i 的最短路径长度
+	void ShortestPath(const Adj_Matrix& adj, int v, std::vector<int>& dist, std::vector<int>& path)
+	{
+		//path和dist初始化由上层完成
+
+		int number = dist.size();
+		//创建一个队列
+		std::queue<int> Q;
+		Q.push(v); //将开始结点入队
+
+		//自身路径为0
+		dist[v] = 0;
+
+		//求v到其他各个顶点的最短路径，类似于图的BFS
+		while (!Q.empty())
+		{
+			//处理队头顶点
+			int u = Q.front();
+			Q.pop();
+
+			//遍历当前点的所有边
+			for (int i = 0; i < number; i++)
+			{
+				//存在边
+				if (adj.graph[u][i] != INT_MAX)
+				{
+					int k = i;
+
+					//dist[k]=-1表示未访问
+					if (dist[k] == -1)
+					{
+						//将u未访问的邻接点k入队
+						Q.push(k);
+
+						//距离增加为u的距离加一
+						dist[k] = dist[u] + 1;
+
+						//更新k的在最短路的前驱结点
+						path[k] = u;
+					}
+				}
+			}
+		}
+	}
+
+	// 输出从 v 到所有其他点的最短路径和路径长度
+	void PrintShortestPath(int v, const std::vector<int>& dist, const std::vector<int>& path)
+	{
+		int n = dist.size();
+
+		for (int i = 0; i < n; ++i)
+		{
+			if (i == v) continue;  // 跳过起点自身
+
+			if (dist[i] == -1)
+			{
+				// 如果 dist[i] 仍为 -1，说明从 v 到 i 不可达
+				std::cout << "No path from " << v << " to " << i << std::endl;
+			}
+			else
+			{
+				// 输出路径长度
+				std::cout << "Shortest path length from " << v << " to " << i << ": " << dist[i] << std::endl;
+
+				// 输出路径
+				std::cout << "Path: ";
+				std::vector<int> path_vec;
+				for (int u = i; u != -1; u = path[u])
+				{
+					path_vec.push_back(u);
+				}
+				std::reverse(path_vec.begin(), path_vec.end());
+
+				for (size_t j = 0; j < path_vec.size(); ++j)
+				{
+					std::cout << path_vec[j];
+					if (j < path_vec.size() - 1)
+						std::cout << " -> ";
+				}
+				std::cout << std::endl;
+			}
+		}
+	}
+
+	//ShortestPath的上层，负责创建，初始化并输出dist和path
+	void SearchShortestPath(const Adj_Matrix& adj, int v)
+	{
+		std::vector<int> dist, path;
+
+		int number = adj.graph.size();
+
+		//初始化dist和path
+		dist.resize(number, -1);
+		path.resize(number, -1);
+
+		ShortestPath(adj, v, dist, path);
+
+		std::cout << "无权最短路:" << std::endl;
+
+		PrintShortestPath(v, dist, path);
+
+		return;
+	}
+
+	//打印矩阵
+	void PrintAdjMatrix(const Adj_Matrix& graph) {
+		std::cout << "邻接矩阵：" << std::endl;
+		for (const auto& row : graph.graph) {
+			for (int val : row) {
+				if (val == INT_MAX) {
+					std::cout << "∞" << "\t";  // 用 ∞ 表示无穷大（无边）
+				}
+				else {
+					std::cout << val << "\t";
+				}
+			}
+			std::cout << std::endl;
+		}
 	}
 };

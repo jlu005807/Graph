@@ -1,6 +1,15 @@
 ﻿  main.cpp
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(343,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(424,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(583,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(500,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Edge.h(503,9): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(322,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(396,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(477,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(569,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(612,9): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_Matrix.h(653,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Orthogonal_List.h(504,5): warning C4984: "if constexpr" 是一种 C++17 语言扩展
+D:\Visual Studio 2022\source\repos\Graph\Graph\Orthogonal_List.h(518,5): warning C4984: "if constexpr" 是一种 C++17 语言扩展
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(818,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(636,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(553,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(777,9): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
   Graph.vcxproj -> D:\Visual Studio 2022\source\repos\Graph\x64\Debug\Graph.exe

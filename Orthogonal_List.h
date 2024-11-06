@@ -143,6 +143,8 @@ public:
 			list.vertices[v].Add_inArc(arc);
 		}
 
+		list.arcnum = m;
+
 		return list;
 	}
 
@@ -168,6 +170,8 @@ public:
 
 			list.vertices[v].Add_inArc(arc);
 		}
+
+		list.arcnum = m;
 
 		return list;
 	}
@@ -250,61 +254,64 @@ public:
 	//不考虑增删顶点了
 
 
-	//在G中删除弧<v, w>
+	// 在G中删除弧<v, w>
 	void DeleteArc(OLGraph<K, T>& graph, int v, int w)
 	{
-		//空图或者v不合法或者w不合法
+		// 空图或者v不合法或者w不合法
 		if (graph.vertices.size() == 0 || v < 0 || v >= graph.vertices.size() || w < 0 || w >= graph.vertices.size())
 		{
 			return;
 		}
 
-		auto freeout = [&](std::shared_ptr<ArcBox<T>> arc, int k)->void {
+		// 删除出边的lambda函数
+		auto freeout = [&](std::shared_ptr<ArcBox<T>>& firstArc, int k) -> void {
+			if (firstArc == nullptr) return;
 
-			while (arc->tlink && arc->tlink->headvext != k)
-			{
+			// 处理firstArc指向的首节点
+			if (firstArc->headvext == k) {
+				firstArc = firstArc->tlink;  // 直接将firstArc指向下一条弧
+				return;
+			}
+
+			auto arc = firstArc;
+			while (arc->tlink && arc->tlink->headvext != k) {
 				arc = arc->tlink;
 			}
 
-			//找到弧
-			if (arc->tlink)
-			{
-				std::shared_ptr<ArcBox<T>> p;
-
-				p = arc->tlink;
-
-				arc->tlink = p->tlink;
+			// 找到弧
+			if (arc->tlink) {
+				arc->tlink = arc->tlink->tlink;
 			}
-
 		};
 
-		auto freein = [&](std::shared_ptr<ArcBox<T>> arc, int k)->void {
+		// 删除入边的lambda函数
+		auto freein = [&](std::shared_ptr<ArcBox<T>>& firstArc, int k) -> void {
+			if (firstArc == nullptr) return;
 
-			while (arc->hlink && arc->hlink->tailvext != k)
-			{
+			// 处理firstArc指向的首节点
+			if (firstArc->tailvext == k) {
+				firstArc = firstArc->hlink;  // 直接将firstArc指向下一条弧
+				return;
+			}
+
+			auto arc = firstArc;
+			while (arc->hlink && arc->hlink->tailvext != k) {
 				arc = arc->hlink;
 			}
 
-			//找到弧
-			if (arc->hlink)
-			{
-				std::shared_ptr<ArcBox<T>> p;
-
-				p = arc->hlink;
-
-				arc->hlink = p->hlink;
-
-				p.reset();
+			// 找到弧
+			if (arc->hlink) {
+				arc->hlink = arc->hlink->hlink;
 			}
-
 		};
 
-		//入边
+		// 删除出边（v到w）
 		freeout(graph.vertices[v].firstout, w);
-		//出边再释放
-		freein(graph.vertices[w].firstin, v);
 
+		// 删除入边（w到v）
+		freein(graph.vertices[w].firstin, v);
 	}
+
 
 	//在图中寻找v和w之间的弧
 	bool Find_Arc(OLGraph<K, T>& graph, int v, int w)
@@ -479,6 +486,46 @@ public:
 			bfs(i, vis, graph, address); // 从未访问的节点开始BFS
 		}
 	}
+
+	// 打印图结构
+	void PrintGraph(OLGraph<K, T>& graph) const
+	{
+		// 遍历每个顶点
+		for (const auto& vertex : graph.vertices)
+		{
+			std::cout << "Vertex " << vertex.data << ":\n";
+
+			// 打印出边（从该顶点出发的弧）
+			std::cout << "  Outgoing edges:\n";
+			auto outArc = vertex.firstout;
+			while (outArc != nullptr)
+			{
+				std::cout << "    -> " << outArc->headvext;
+				if constexpr (!std::is_same_v<T, int>) // 如果不是int类型，假设info有意义
+				{
+					std::cout << " (weight: " << outArc->info << ")";
+				}
+				std::cout << "\n";
+				outArc = outArc->tlink;
+			}
+
+			// 打印入边（以该顶点为终点的弧）
+			std::cout << "  Incoming edges:\n";
+			auto inArc = vertex.firstin;
+			while (inArc != nullptr)
+			{
+				std::cout << "    <- " << inArc->tailvext;
+				if constexpr (!std::is_same_v<T, int>) // 如果不是int类型，假设info有意义
+				{
+					std::cout << " (weight: " << inArc->info << ")";
+				}
+				std::cout << "\n";
+				inArc = inArc->hlink;
+			}
+			std::cout << "\n";
+		}
+	}
+
 
 	//与邻接表相似，不考虑拓扑排序和关键路径了
 };

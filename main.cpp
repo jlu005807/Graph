@@ -77,6 +77,23 @@ void TestEdge()
     //测试无权最短路径
     manager.SearchShortestPath(graph,10,0);
     std::cout << std::endl;
+
+    // Define edges and weights
+   // 定义边和权重
+    std::vector<Edge> graph1 = {
+        {0, 1}, {0, 2}, {1, 3}, {1, 4}, {2, 4}, {2, 5},
+        {3, 6}, {4, 6}, {4, 7}, {5, 7}, {6, 7}, {3, 5}
+    };
+
+    std::vector<int> weights1 = { 3, 10, 5, 11, 7, 4, 2, 9, 6, 3, 1, 8 };
+
+
+    // Define start and target vertices for Dijkstra's algorithm
+    int start = 0;
+
+    // Run Dijkstra's algorithm
+    manager.Dijkstra_SearchShortestPath(graph1, 8, weights1, start);
+    std::cout << std::endl;
 }
 
 
@@ -133,6 +150,24 @@ void TestAdjMatrix() {
     manager.SearchShortestPath(graph, 0);
     std::cout << std::endl;
 
+    // Define edges and weights
+     // 定义边和权重
+    int edges1[12][2] = {
+        {0, 1}, {0, 2}, {1, 3}, {1, 4}, {2, 4}, {2, 5},
+        {3, 6}, {4, 6}, {4, 7}, {5, 7}, {6, 7}, {3, 5}
+    };
+    std::vector<int> weights1 = { 3, 10, 5, 11, 7, 4, 2, 9, 6, 3, 1, 8 };
+
+    // Create a directed graph with weighted edges
+    Adj_Matrix graph1 = manager.CreateGraph(8, 12, edges1, true, weights1);
+
+    // Define start and target vertices for Dijkstra's algorithm
+    int start = 0;
+
+    // Run Dijkstra's algorithm
+    manager.Dijkstra_SearchShortestPath(graph1, start);
+  
+   
 }
 
 // 测试邻接表
@@ -200,6 +235,23 @@ void TestAdjList() {
     //测试无权最短路径
     manager.SearchShortestPath(graph, 0);
     std::cout << std::endl;
+
+    // Define edges and weights
+    // 定义边和权重
+    int edges1[12][2] = {
+        {0, 1}, {0, 2}, {1, 3}, {1, 4}, {2, 4}, {2, 5},
+        {3, 6}, {4, 6}, {4, 7}, {5, 7}, {6, 7}, {3, 5}
+    };
+    std::vector<int> weights1 = { 3, 10, 5, 11, 7, 4, 2, 9, 6, 3, 1, 8 };
+
+    // Create a directed graph with weighted edges
+    Adj_List<int, int> graph1 = manager.CreateGraph(8, 12, edges1,  weights1 ,true);
+
+    // Define start and target vertices for Dijkstra's algorithm
+    int start = 0;
+
+    // Run Dijkstra's algorithm
+    manager.Dijkstra_SearchShortestPath(graph1, start);
 }
 
 //测试十字链表

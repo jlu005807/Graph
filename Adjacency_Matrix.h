@@ -665,6 +665,140 @@ public:
 		return;
 	}
 
+	//正权最短路径,即图的权值为正实数，求点v到其他各个点的最短路经和最短路径的长度
+	//可以用于无权最短路径，即权值为1;
+	//找局部最优路，即在已知距离的其他点里找最小距离的点组成局部最优路，再由此点更新其他点的最短距离
+	void Dijkstra_ShortestPath(const Adj_Matrix& adj, int v, std::vector<bool> vis, std::vector<int>& dist, std::vector<int>& path)
+	{
+		//path和dist,vis初始化由上层完成
+
+		//自身路径为0
+		dist[v] = 0;
+
+		//标记访问
+		vis[v] = true;
+
+		int u = v;
+		
+		//求v到其他各个顶点的最短路径
+		//访问除了起始点以外所有点
+		for (int j = 0; j < adj.graph.size() - 1; j++)
+		{
+			//更新从u出发到未访问的所有顶点的最短路径长度
+			for (int i = 0; i < adj.graph.size(); i++)
+			{
+				int k = i;
+
+				//未访问过并且有更小路径
+				if (!vis[k] && adj.graph[u][k]!=INT_MAX && dist[u] + adj.graph[u][k] < dist[k])
+				{
+					//更新k最短路径和前驱结点
+					dist[k] = dist[u] + adj.graph[u][k];
+					path[k] = u;
+				}
+			}
+
+			//寻找当前未访问过并且有最小路径的点
+			int shortest = INT_MAX;
+
+			for (int i = 0; i < adj.graph.size(); i++)
+			{
+				if (dist[i] < shortest && !vis[i])
+				{
+					u = i;
+					shortest = dist[i];
+				}
+			}
+
+			//访问新顶点
+			vis[u] = true;
+		}
+	}
+
+	//Dijkstra_ShortestPath的上层，负责创建，初始化并输出dist和path
+	void Dijkstra_SearchShortestPath(const Adj_Matrix& adj, int v)
+	{
+		std::vector<int> dist, path;
+
+		//vis不仅是访问标识，更重要的是说明该点已找到最短路径
+		//并且可以通过该点作为其他点的最短路径中的中转点，即找到局部最优路
+		std::vector<bool> vis;
+
+		int number = adj.graph.size();
+
+		//初始化dist和path,vis
+		vis.resize(number, false);
+		dist.resize(number, 0);
+		path.resize(number, -1);
+
+		for (int i = 0; i < number; i++)
+		{
+			//将i到各个终点的最短路径长度初始化为弧上的权值
+			dist[i] = adj.graph[v][i];
+
+			//如果i和v之间有弧， 则将i的前驱置为v
+			if (dist[i] < INT_MAX)path[i] = v;
+		}
+		
+
+		Dijkstra_ShortestPath(adj, v, vis, dist, path);
+
+		std::cout << "正权最短路:" << std::endl;
+
+		PrintShortestPath(v, dist, path);
+
+		return;
+	}
+
+	//对于每一对顶点之间的最短路径
+	//可以以每个顶点分别调用Dijkstra算法
+	//但是对于邻接矩阵，可以使用Floyd算法实现，但是时间复杂度都是O(n^3)
+	void Floyd_ShortestPath(const Adj_Matrix& adj)
+	{
+		//将Vi到Vj的最短路径长度初始化， 即dist[i][j]= graph[i][j]
+		std::vector<std::vector<int>> dist, path;
+
+		//初始化为同邻接矩阵大小
+		dist.resize(adj.graph.size(), std::vector<int>(adj.graph.size(), 0));
+		path.resize(adj.graph.size(), std::vector<int>(adj.graph.size(), -1));
+
+		//遍历图
+		for (int i = 0; i < adj.graph.size(); i++)
+		{
+			for (int j = 0; j < adj.graph.size(); j++)
+			{
+				dist[i][j] = adj.graph[i][j];
+
+				//如果i和j之间有弧，则将j的前驱置为l
+				if (dist[i][j] < INT_MAX)
+					path[i][j] = i; 
+			}
+		}
+
+		//n次比较和更新
+		for (int k = 0; k < adj.graph.size(); k++)
+		{
+			//每次遍历图，在Vi和Vj现有最优路径里加入顶点Vo。
+			//比较 现路径 和 加入v0后的路径 长度,取较短者更新最短路径
+			for (int i = 0; i < adj.graph.size(); i++)
+			{
+				for (int j = 0; j < adj.graph.size(); j++)
+				{
+					//如果更小则更新路径
+					if (dist[i][k] + dist[k][j] < dist[i][j])
+					{
+						//更新长度和前驱
+						dist[i][j] = dist[i][k] + dist[k][j];
+						path[i][j] = path[k][j];
+					}
+
+				}
+			}
+		}
+
+		//打印类似于n次打印Dijkstra的结果,不考虑实现
+	}
+
 	//打印矩阵
 	void PrintAdjMatrix(const Adj_Matrix& graph) {
 		std::cout << "邻接矩阵：" << std::endl;

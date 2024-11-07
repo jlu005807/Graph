@@ -830,6 +830,7 @@ public:
 		return;
 	}
 
+	//打印邻接表
 	void PrintGraph(const Adj_List<K,T>& list) {
 		std::cout << "Graph adjacency list representation:" << std::endl;
 		for (const auto& node : list.vertices) {
@@ -846,17 +847,18 @@ public:
 	//正权最短路径,即图的权值为正实数，求点v到其他各个点的最短路经和最短路径的长度
 	//可以用于无权最短路径，即权值为1;
 	//找局部最优路，即在已知距离的其他点里找最小距离的点组成局部最优路，再由此点更新其他点的最短距离
-	void Dijkstra_ShortestPath(const Adj_List<K, T>& list, int v, std::vector<bool> vis,std::vector<int>& dist, std::vector<int>& path)
+	void Dijkstra_ShortestPath(const Adj_List<K, T>& list, int v, std::vector<bool> vis, std::vector<int>& dist, std::vector<int>& path)
 	{
 		//path和dist,vis初始化由上层完成
-		
+
 		//自身路径为0
 		dist[v] = 0;
 
 		//标记访问
 		vis[v] = true;
 
-		auto p = list.vertices[i].firstarc;
+		int u = v;
+		auto p = list.vertices[v].firstarc;
 
 		//求v到其他各个顶点的最短路径
 		//访问除了起始点以外所有点
@@ -892,14 +894,18 @@ public:
 
 			//访问新顶点和p
 			vis[u] = true;
-			p = list.vertices[u]->firstarc;
+			p = list.vertices[u].firstarc;
 		}
 	}
 
 	//Dijkstra_ShortestPath的上层，负责创建，初始化并输出dist和path
 	void Dijkstra_SearchShortestPath(const Adj_List<K, T>& list, int v)
 	{
-		std::vector<int> dist, path, vis;
+		std::vector<int> dist, path;
+
+		//vis不仅是访问标识，更重要的是说明该点已找到最短路径
+		//并且可以通过该点作为其他点的最短路径中的中转点，即找到局部最优路
+		std::vector<bool> vis;
 
 		int number = list.vertices.size();
 
@@ -908,13 +914,16 @@ public:
 		path.resize(number, -1);
 		vis.resize(number, false);
 
-		Dijkstra_ShortestPath(list, v, vis,dist, path);
+		Dijkstra_ShortestPath(list, v, vis, dist, path);
 
-		std::cout << "无权最短路:" << std::endl;
+		std::cout << "正权最短路:" << std::endl;
 
 		PrintShortestPath(v, dist, path);
 
 		return;
 	}
 
+
+	//对于每一对顶点之间的最短路径
+	//可以以每个顶点分别调用Dijkstra算法
 };

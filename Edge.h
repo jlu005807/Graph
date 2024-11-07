@@ -7,7 +7,7 @@
 
 //使用一个数组来存边，数组中的每个元素都包含一条边的起点与终点（带边权的图还包含边权）。
 //（或者使用多个数组分别存起点，终点和边权。）
-//此存储结构用于有向图
+//此存储结构默认用于有向图，如果为无向图，需要存放对称边
 
 struct Edge
 {
@@ -497,6 +497,26 @@ public:
 		}
 	}
 
+	
+
+	//ShortestPath的上层，负责创建，初始化并输出dist和path,对于Edge存放的图没有具体顶点数，需要输入一个
+	void SearchShortestPath(const std::vector<Edge> graph,int number, int v)
+	{
+		std::vector<int> dist, path;
+
+		//初始化dist和path
+		dist.resize(number, -1);
+		path.resize(number, -1);
+
+		ShortestPath(graph, v, dist, path);
+
+		std::cout << "无权最短路:" << std::endl;
+		
+		PrintShortestPath(v, dist, path);
+
+		return;
+	}
+
 	// 输出从 v 到所有其他点的最短路径和路径长度
 	void PrintShortestPath(int v, const std::vector<int>& dist, const std::vector<int>& path)
 	{
@@ -506,7 +526,7 @@ public:
 		{
 			if (i == v) continue;  // 跳过起点自身
 
-			if (dist[i] == -1)
+			if (dist[i] == -1 || dist[i] == INT_MAX)
 			{
 				// 如果 dist[i] 仍为 -1，说明从 v 到 i 不可达
 				std::cout << "No path from " << v << " to " << i << std::endl;
@@ -536,23 +556,88 @@ public:
 		}
 	}
 
-	//ShortestPath的上层，负责创建，初始化并输出dist和path,对于Edge存放的图没有具体顶点数，需要输入一个
-	void SearchShortestPath(const std::vector<Edge> graph,int number, int v)
+	//正权最短路径,即图的权值为正实数，求点v到其他各个点的最短路经和最短路径的长度
+	//可以用于无权最短路径，即权值为1;
+	//找局部最优路，即在已知距离的其他点里找最小距离的点组成局部最优路，再由此点更新其他点的最短距离
+	void Dijkstra_ShortestPath(const std::vector<Edge>& graph, int number,const std::vector<int>& weights,int v, std::vector<bool> vis,std::vector<int>& dist, std::vector<int>& path)
+	{
+		//path和dist,vis初始化由上层完成
+		
+		//自身路径为0
+		dist[v] = 0;
+
+		//标记访问
+		vis[v] = true;
+		
+		int u = v;
+		
+		//求v到其他各个顶点的最短路径
+		//访问除了起始点以外所有点
+		for (int j = 0; j < number-1; j++)
+		{
+			//从目前最小路径的点出发更新未访问点的最小路径
+			for(int i=0;i<graph.size();i++)
+			{
+				auto p = graph[i];
+				auto info = weights[i];
+				if(p.u==u)
+				{
+					int k = p.v;
+
+					//未访问过并且有更小路径
+					if (!vis[k] && dist[u] + info < dist[k])
+					{
+						//更新最短路径和前驱结点
+						dist[k] = dist[u] + info;
+						path[k] = u;
+					}
+				}
+
+			}
+
+			//寻找当前未访问过并且有最小路径的点
+			int shortest = INT_MAX;
+
+			for (int i = 0; i < number; i++)
+			{
+				if (dist[i] < shortest && !vis[i])
+				{
+					u = i;
+					shortest = dist[i];
+				}
+			}
+
+			//访问新顶点
+			vis[u] = true;
+		}
+	}
+
+	//Dijkstra_ShortestPath的上层，负责创建，初始化并输出dist和path
+	void Dijkstra_SearchShortestPath(const std::vector<Edge>& graph,int number,const std::vector<int>& weights, int v)
 	{
 		std::vector<int> dist, path;
 
-		//初始化dist和path
-		dist.resize(number, -1);
+		//vis不仅是访问标识，更重要的是说明该点已找到最短路径
+		//并且可以通过该点作为其他点的最短路径中的中转点，即找到局部最优路
+		std::vector<bool> vis;
+
+
+		//初始化dist和path,vis
+		dist.resize(number, INT_MAX);//无边为无穷大
 		path.resize(number, -1);
 
-		ShortestPath(graph, v, dist, path);
+		vis.resize(number, false);
 
-		std::cout << "无权最短路:" << std::endl;
-		
+		Dijkstra_ShortestPath(graph,number,weights, v, vis,dist, path);
+
+		std::cout << "正权最短路:" << std::endl;
+
 		PrintShortestPath(v, dist, path);
 
 		return;
 	}
 
+	//对于每一对顶点之间的最短路径
+	//可以以每个顶点分别调用Dijkstra算法
 
 };

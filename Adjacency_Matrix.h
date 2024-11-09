@@ -214,7 +214,7 @@ public:
 
 	}
 
-	bool find_edge(Adj_Matrix& adj, int v, int w)
+	bool find_edge(const Adj_Matrix& adj, int v, int w)
 	{
 		//空图
 		if (adj.graph.empty())
@@ -239,7 +239,7 @@ public:
 	}
 
 	//深度优先搜索（DFS）算法,并对节点进行处理,vis保存是否访问
-	void dfs(int u, std::vector<bool>& vis, Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void dfs(int u, std::vector<bool>& vis, const Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		//访问过或者u不合法
 		if (u<0||u>=vis.size()||vis[u])
@@ -264,7 +264,7 @@ public:
 
 	}
 
-	void do_dfs(Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void do_dfs(const Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		//空图
 		if (adj.graph.empty())
@@ -283,7 +283,7 @@ public:
 	}
 
 	//深度优先搜索（DFS）算法的非递归形式，类似于广度优先，但这里使用栈
-	void dfs_non_recursive(int start, std::vector<bool>& vis, Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void dfs_non_recursive(int start, std::vector<bool>& vis, const Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		//已经访问过或者start不合法
 		if (vis[start] || start < 0 || start >= vis.size())return;
@@ -317,7 +317,7 @@ public:
 	}
 
 	//图深度优先算法的非递归
-	void do_dfs_non_recursive(Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void do_dfs_non_recursive(const Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		int number = adj.graph.size();
 
@@ -337,7 +337,7 @@ public:
 
 
 	//广度优先搜索（BFS）算法,并对节点进行处理,vis保存是否访问
-	void bfs(int start, std::vector<bool>& vis, Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void bfs(int start, std::vector<bool>& vis, const Adj_Matrix& adj, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		//已经访问过或者start不合法
 		if (vis[start] || start < 0 || start >= vis.size())return;
@@ -370,7 +370,7 @@ public:
 	}
 
 	// 执行BFS遍历
-	void do_bfs(Adj_Matrix& adj,  std::function<void(int&)> address = [](int& u)->void { std::cout << u; }) {
+	void do_bfs(const Adj_Matrix& adj,  std::function<void(int&)> address = [](int& u)->void { std::cout << u; }) {
 		// 空图
 		if (adj.graph.empty()) return;
 
@@ -384,7 +384,7 @@ public:
 	}
 
 	//生成拓扑排序
-	std::vector<int> TopologicalSort(Adj_Matrix adj)
+	std::vector<int> TopologicalSort(const Adj_Matrix& adj)
 	{
 		// 无向图无法进行拓扑排序
 		if (!adj.is_direct)
@@ -798,6 +798,129 @@ public:
 
 		//打印类似于n次打印Dijkstra的结果,不考虑实现
 	}
+
+	//在一个连通网的所有生成树中，各边的代价之和最小的那棵生成树
+	//称为该连通网的最小代价生成树(MinimumCost Spanning Tree), 简称为最小生成树。
+
+	//在n个顶点的网络N中构建最小支撑树
+	//此最小支撑树为n-l条边和图的n个顶点构成的具有最小代价一个连通图
+	//一个网络可能存在不只一棵最小支撑树
+
+	//连通分量数
+	//dfs执行次数即连通分量数
+	int Connected_Component(const Adj_Matrix& adj)
+	{
+		// 空图
+		if (adj.graph.empty()) return 0;
+
+		//连通分量数
+		int count = 0;
+
+		std::vector<bool> vis(adj.graph.size(), false); // 创建访问标志
+
+		// 遍历所有节点，确保不遗漏任何不连通的部分
+		for (int i = 0; i < adj.graph.size(); i++)
+		{
+			if(!vis[i])
+			{
+				count++;
+				dfs(i, vis, adj, [](int& u)->void {}); // 从未访问的节点开始BFS
+			}
+		}
+
+		return count;
+
+	}
+
+	//普里姆 (Prim) 算法，又称为加点法,适用于稠密图
+	//在已选顶点的集合里（起始时只有起始点）找到未选点与已选点的权值最小的边
+	//将其连接点加入树中，重新更新未选点的权值最小边
+	//默认此图为连通图，并返回一个图
+	Adj_Matrix MiniSpanTree_Prim(const Adj_Matrix& adj,int u=0/*起始点*/)
+	{
+		//非连通图，返回空图
+		if (Connected_Component(adj) != 1)
+		{
+			return Adj_Matrix();
+		}
+
+		//初始化一个图
+		Adj_Matrix MiniSpanTree(adj.graph.size());
+
+
+		//辅助数组closedge,以记录从U到V-U具有最小权值的边
+		//first存储最小边的权值，second存储最小边在 U 中的那个顶点
+		std::vector<std::pair<int, int>> close_edge;
+		//标记是否访问
+		std::vector<bool> vis;
+
+		vis.resize(adj.graph.size(), false);
+		close_edge.resize(adj.graph.size());
+
+		//初始化cloes_edge
+		for (int i = 0; i < adj.graph.size(); i++)
+		{
+			if (i != u) 
+			{
+				close_edge[i].first = u;
+				close_edge[i].second = adj.graph[u][i];
+			}
+		}
+
+		//标记起始点
+		vis[u] = true;
+
+		//找到最小权值的边
+		auto Min = [&]()->int {
+			int minindex = -1;
+			int min = INT_MAX;
+			for (int i = 0; i < close_edge.size(); i++)
+			{
+				const auto& vex = close_edge[i];
+
+				//未访问并且有更小权值的边
+				if (!vis[i] && vex.first < min)
+				{
+					minindex = i;
+					min = vex.first;
+				}
+			}
+			return minindex;
+		};
+
+		//选择其余n-1个顶点，生成n-1 条边(n=G.vexnum)
+		for (int j = 1; j < adj.graph.size(); j++)
+		{
+			//求出最小权值的边
+			int u0 = Min();
+
+			//为MiniSpanTree增加边
+			int v0 = close_edge[u0].second;
+			MiniSpanTree.graph[u0][v0] = close_edge[u0].first;
+
+			//标记u0，并更新close_edge
+			vis[u0] = true;
+
+			for (int j = 0; j < close_edge.size(); j++)
+			{
+				if (adj.graph[u0][j] < close_edge[j].first)
+				{
+					close_edge[j].first = adj.graph[u0][j];
+					close_edge[j].second = j;
+				}
+			}
+
+		}
+
+		//返回
+		return MiniSpanTree;
+	}
+
+
+	//克鲁斯卡尔 (Kruskal)算法，可称为“加边法”，适用于稀疏图
+	//每次选出权值最小并且无法使现有的树形成环的边加入最小支撑树
+	//适合以Edge存储的树，此处不考虑实现，不过可以考虑转换
+
 
 	//打印矩阵
 	void PrintAdjMatrix(const Adj_Matrix& graph) {

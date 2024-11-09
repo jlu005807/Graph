@@ -78,6 +78,7 @@ public:
 	//是否为有向图
 	bool is_direct;
 
+
 	//无data的顶点,默认data为序号
 	Adj_List(int vexnum, int arcnum, bool direct = false) :arcnum(arcnum), is_direct(direct)
 	{
@@ -926,4 +927,118 @@ public:
 
 	//对于每一对顶点之间的最短路径
 	//可以以每个顶点分别调用Dijkstra算法
+
+
+	//连通分量数
+	//dfs执行次数即连通分量数
+	int Connected_Component(const Adj_List<K, T>& list)
+	{
+		// 空图
+		if (list.vertices.empty()) return 0;
+
+		//连通分量数
+		int count = 0;
+
+		std::vector<bool> vis(list.vertices.size(), false); // 创建访问标志
+
+		// 遍历所有节点，确保不遗漏任何不连通的部分
+		for (int i = 0; i < list.vertices.size(); i++)
+		{
+			if (!vis[i])
+			{
+				count++;
+				dfs(i, vis, list, [](int& u)->void {}); // 从未访问的节点开始BFS
+			}
+		}
+
+		return count;
+
+	}
+
+	//普里姆 (Prim) 算法，又称为加点法,适用于稠密图
+	//在已选顶点的集合里（起始时只有起始点）找到未选点与已选点的权值最小的边
+	//将其连接点加入树中，重新更新未选点的权值最小边
+	//默认此图为连通图，并返回一个图
+	Adj_List<K, T> MiniSpanTree_Prim(const Adj_List<K, T>& list, int u = 0/*起始点*/)
+	{
+		//非连通图，返回空图
+		if (Connected_Component(list) != 1)
+		{
+			return Adj_List<K, T>(0,0);
+		}
+
+		int vexnum = list.vertices.size();
+
+		//初始化一个图
+		Adj_List<K, T> MiniSpanTree(vexnum, list.arcnum, list.is_direct);
+
+
+		//辅助数组closedge,以记录从U到V-U具有最小权值的边
+		//first存储最小边的权值，second存储最小边在 U 中的那个顶点
+		std::vector<std::pair<T, int>> close_edge;
+		//标记是否访问
+		std::vector<bool> vis;
+
+		vis.resize(vexnum, false);
+		close_edge.resize(vexnum,std::make_pair<int,int>(INT_MAX,u));
+
+		//初始化cloes_edge
+		auto p = list.vertices[u].firstarc;
+		while (p)
+		{
+			close_edge[p->adjvex].first = p->info;
+			p = p->nextarc;
+		}
+
+		//标记起始点
+		vis[u] = true;
+
+		//找到最小权值的边
+		auto Min = [&]()->int {
+			int minindex = -1;
+			int min = INT_MAX;
+			for (int i = 0; i < close_edge.size(); i++)
+			{
+				const auto& vex = close_edge[i];
+
+				//未访问并且有更小权值的边
+				if (!vis[i] && vex.first < min)
+				{
+					minindex = i;
+					min = vex.first;
+				}
+			}
+			return minindex;
+		};
+
+		//选择其余n-1个顶点，生成n-1 条边(n=G.vexnum)
+		for (int j = 1; j < adj.graph.size(); j++)
+		{
+			//求出最小权值的边
+			int u0 = Min();
+
+			//为MiniSpanTree增加边
+			int v0 = close_edge[u0].second;
+			std::shared_ptr<ArcNode<T>> arc(new ArcNode<T>(v0));
+			MiniSpanTree.vertices[u0].Add_arc(arc,close_edge[u0].first);
+
+			//标记u0，并更新close_edge
+			vis[u0] = true;
+
+			auto p = list.vertices[u0].firstarc;
+			while (p)
+			{
+				if (p->info < close_edge[p->adjvex].first)
+				{
+					close_edge[j].first = p->info;
+					close_edge[j].second = p->adjvex;
+				}
+				p = p->nextarc;
+			}
+
+		}
+
+		//返回
+		return MiniSpanTree;
+	}
 };

@@ -8,6 +8,7 @@
 //使用一个数组来存边，数组中的每个元素都包含一条边的起点与终点（带边权的图还包含边权）。
 //（或者使用多个数组分别存起点，终点和边权。）
 //此存储结构默认用于有向图，如果为无向图，需要存放对称边
+//此存储结构不考虑无边图，即零图
 
 struct Edge
 {
@@ -23,9 +24,25 @@ struct Edge
 
 	}
 
+
 	bool operator==(const Edge& other)
 	{
 		return this->u == other.u && this->v == other.v;
+	}
+
+
+	Edge& operator=(const Edge& other)
+	{
+		//判断自身
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		this->u = other.u;
+		this->v = other.v;
+
+		return *this;
 	}
 };
 
@@ -147,7 +164,7 @@ public:
 	}
 
 	//深度优先搜索（DFS）算法,并对节点进行处理,vis保存是否访问
-	void dfs(int u, std::vector<bool>& vis, std::vector<Edge> graph, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void dfs(int u, std::vector<bool>& vis, const std::vector<Edge>& graph, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		//已经访问过或者u不合法
 		if (vis[u]||u<0||u>=vis.size())return;
@@ -169,7 +186,7 @@ public:
 
 	}
 
-	void do_dfs(std::vector<Edge> graph, int number, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void do_dfs(const std::vector<Edge>& graph, int number, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		//空图
 		if (number <= 0)
@@ -186,7 +203,7 @@ public:
 	}
 
 	//深度优先搜索（DFS）算法的非递归形式，类似于广度优先，但这里使用栈
-	void dfs_non_recursive(int start, std::vector<bool>& vis, std::vector<Edge> graph, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void dfs_non_recursive(int start, std::vector<bool>& vis, const std::vector<Edge>& graph, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		//已经访问过或者start不合法
 		if (vis[start] || start < 0 || start >= vis.size())return;
@@ -219,7 +236,7 @@ public:
 	}
 
 	//图深度优先算法的非递归
-	void do_dfs_non_recursive(std::vector<Edge> graph, int number, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void do_dfs_non_recursive(const std::vector<Edge>& graph, int number, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		//空图
 		if (number <= 0)
@@ -236,7 +253,7 @@ public:
 	}
 
 	//广度优先搜索（BFS）算法,并对节点进行处理,vis保存是否访问
-	void bfs(int start, std::vector<bool>& vis, std::vector<Edge> graph, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
+	void bfs(int start, std::vector<bool>& vis, const std::vector<Edge>& graph, std::function<void(int&)> address = [](int& u)->void {std::cout << u; })
 	{
 		//已经访问过或者start不合法
 		if (vis[start] || start < 0 || start >= vis.size())return;
@@ -270,7 +287,7 @@ public:
 	}
 
 	// 执行BFS遍历
-	void do_bfs(std::vector<Edge> graph, int number, std::function<void(int&)> address = [](int& u)->void { std::cout << u ; }) {
+	void do_bfs(const std::vector<Edge>& graph, int number, std::function<void(int&)> address = [](int& u)->void { std::cout << u ; }) {
 		// 空图
 		if (number <= 0) return;
 
@@ -286,7 +303,7 @@ public:
 	//拓扑排序就是将AOV - 网中所有顶点排成一个线性序列，该序列满足：但是该序列不唯一
 	// 若在AOV - 网中由顶点Vi, 到顶点Vj；有一条路径，则在该线性序列中的顶点Vi; 必定在顶点Vj之前。
 	//在此函数里默认为有向无环图（DAG)
-	std::vector<int> TopologicalSort(std::vector<Edge> Graph, int number)
+	std::vector<int> TopologicalSort(const std::vector<Edge>& Graph, int number)
 	{
 		std::vector<int> Topo;//记录拓扑排序
 
@@ -360,7 +377,7 @@ public:
 	//其中，顶点表示事件， 弧表示活动，权表示活动持续的时间。
 	//要估算整项工程完成的最短时间，就是要找一条从源点到汇点的带权路径长度最长的路径，称为关键路径(Critical Path)。
 	//故在正常的情况（无环）下，网中只有一个入度为零的点，称作源点，也只有一个出度为零的点，称作汇点。
-	std::vector<int> CriticalPath(std::vector<Edge> Graph, std::vector<int>& weights, int number)
+	std::vector<int> CriticalPath(const std::vector<Edge>& Graph, std::vector<int>& weights, int number)
 	{
 		//求出拓扑排序
 		std::vector<int> Topo = TopologicalSort(Graph, number);
@@ -639,5 +656,102 @@ public:
 
 	//对于每一对顶点之间的最短路径
 	//可以以每个顶点分别调用Dijkstra算法
+
+	//连通分量数
+	//dfs执行次数即连通分量数
+	int Connected_Component(const std::vector<Edge>& graph,int number)
+	{
+		// 空图
+		if (number<=0) return 0;
+
+		//连通分量数
+		int count = 0;
+
+		std::vector<bool> vis(number, false); // 创建访问标志
+
+		// 遍历所有节点，确保不遗漏任何不连通的部分
+		for (int i = 0; i <number; i++)
+		{
+			if (!vis[i])
+			{
+				count++;
+				bfs(i, vis, graph, [](int& u)->void {}); // 从未访问的节点开始BFS
+			}
+		}
+
+		return count;
+
+	}
+    
+
+	//普里姆 (Prim) 算法，又称为加点法,适用于稠密图
+	//在已选顶点的集合里（起始时只有起始点）找到未选点与已选点的权值最小的边
+	//将其连接点加入树中，重新更新未选点的权值最小边
+	//默认此图为连通图，并返回一个图,此方法适用于邻接矩阵，此处不考虑实现
+
+
+	//克鲁斯卡尔 (Kruskal)算法，可称为“加边法”，适用于稀疏图
+	//每次选出权值最小并且无法使现有的树形成环的边加入最小支撑树,返回一个图
+	std::vector<Edge> MiniSpanTree_Kruskal( std::vector<Edge> graph,int number,const std::vector<int> weights)
+	{
+		//非连通图
+		if (Connected_Component(graph,number) != 1)
+		{
+			return{};
+		}
+
+		std::vector<Edge> MiniSpanTree;
+
+		//排序graph的边，使其从以权值从小到大排序，利用冒泡排序
+		bool flag = true;
+		while(flag)
+		{
+			flag = false;
+			for (int i = 0; i < graph.size(); i++)
+			{
+				if (weights[i] > weights[i + 1])
+				{
+					auto p = graph[i];
+					graph[i + 1] = graph[i];
+					graph[i] = p;
+					flag = true;
+				}
+			}
+		}
+
+		//辅助数组Vexset,标识各个顶点所属的连通分量,类似于并查集
+		std::vector<int> Vexset;
+		Vexset.resize(number,0);
+		//初始化,表示各顶点自成一个连通分址
+		for (int i = 0; i < number; i++)
+		{
+			Vexset[i] = i;
+		}
+
+		//开始创建最小支撑树
+		for (int i = 0; i < graph.size(); i++)
+		{
+			int v1 = graph[i].u;
+			int v2 = graph[i].v;
+			int vs1 = Vexset[v1];
+			int vs2 = Vexset[v2];
+
+			//边的两个顶点不在同一连通分量
+			if (vs1 != vs2)
+			{
+				//加入此边
+				MiniSpanTree.push_back(Edge(v1, v2));
+
+				//合并vs1和vs2两个分量，即两个集合统一编号
+				for (int j = 0; j < number; j++)
+				{
+					if (Vexset[j] == vs2)Vexset[j] = vs1;
+				}
+			}
+		}
+
+		//返回
+		return MiniSpanTree;
+	}
 
 };

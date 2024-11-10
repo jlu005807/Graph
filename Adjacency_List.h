@@ -982,7 +982,7 @@ public:
 		vis.resize(vexnum, false);
 		close_edge.resize(vexnum,std::make_pair<int,int>(INT_MAX,u));
 
-		//初始化cloes_edge
+		//初始化cloes_edge,将起始点与其他点的最小边更新
 		auto p = list.vertices[u].firstarc;
 		while (p)
 		{
@@ -996,7 +996,7 @@ public:
 		//找到最小权值的边
 		auto Min = [&]()->int {
 			int minindex = -1;
-			int min = INT_MAX;
+			T min = INT_MAX;
 			for (int i = 0; i < close_edge.size(); i++)
 			{
 				const auto& vex = close_edge[i];
@@ -1012,15 +1012,23 @@ public:
 		};
 
 		//选择其余n-1个顶点，生成n-1 条边(n=G.vexnum)
-		for (int j = 1; j < adj.graph.size(); j++)
+		for (int j = 1; j < vexnum; j++)
 		{
 			//求出最小权值的边
 			int u0 = Min();
+
+			if (u0 == -1) break;  // 无连接点，非连通情况
 
 			//为MiniSpanTree增加边
 			int v0 = close_edge[u0].second;
 			std::shared_ptr<ArcNode<T>> arc(new ArcNode<T>(v0));
 			MiniSpanTree.vertices[u0].Add_arc(arc,close_edge[u0].first);
+
+			//无向图，则增加对称边
+			if (!MiniSpanTree.is_direct)
+			{
+				MiniSpanTree.vertices[v0].Add_arc(arc, close_edge[u0].first);
+			}
 
 			//标记u0，并更新close_edge
 			vis[u0] = true;

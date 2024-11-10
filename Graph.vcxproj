@@ -130,6 +130,7 @@
     <ClInclude Include="Adjacency_List.h" />
     <ClInclude Include="Adjacency_Matrix.h" />
     <ClInclude Include="Adjacency_Multilist.h" />
+    <ClInclude Include="Chain_Forward_Star.h" />
     <ClInclude Include="Edge.h" />
     <ClInclude Include="Orthogonal_List.h" />
   </ItemGroup>

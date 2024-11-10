@@ -30,6 +30,9 @@
     <ClInclude Include="Adjacency_Multilist.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Chain_Forward_Star.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

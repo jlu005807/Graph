@@ -841,11 +841,11 @@ public:
 		//非连通图，返回空图
 		if (Connected_Component(adj) != 1)
 		{
-			return Adj_Matrix();
+			return Adj_Matrix(0);
 		}
 
 		//初始化一个图
-		Adj_Matrix MiniSpanTree(adj.graph.size());
+		Adj_Matrix MiniSpanTree(adj.graph.size(),adj.is_direct);
 
 
 		//辅助数组closedge,以记录从U到V-U具有最小权值的边
@@ -862,8 +862,8 @@ public:
 		{
 			if (i != u) 
 			{
-				close_edge[i].first = u;
-				close_edge[i].second = adj.graph[u][i];
+				close_edge[i].first = adj.graph[u][i];
+				close_edge[i].second = u;
 			}
 		}
 
@@ -893,10 +893,22 @@ public:
 		{
 			//求出最小权值的边
 			int u0 = Min();
+			
+			// 无连接点，非连通情况
+			if (u == -1)
+			{
+				break;
+			}
 
 			//为MiniSpanTree增加边
 			int v0 = close_edge[u0].second;
 			MiniSpanTree.graph[u0][v0] = close_edge[u0].first;
+			
+			// 无向图，则则增加对称边
+			if(!MiniSpanTree.is_direct)
+			{
+				MiniSpanTree.graph[v0][u0] = close_edge[u0].first;
+			}
 
 			//标记u0，并更新close_edge
 			vis[u0] = true;

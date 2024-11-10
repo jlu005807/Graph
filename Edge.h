@@ -17,9 +17,12 @@ struct Edge
 	int u;
 	int v;
 
+	//加入权值
+	int weight;
+
 	Edge() = default;
 
-	Edge(int _u, int _v) :u(_u), v(_v)
+	Edge(int _u, int _v,int weight=1) :u(_u), v(_v),weight(weight)
 	{
 
 	}
@@ -41,6 +44,7 @@ struct Edge
 
 		this->u = other.u;
 		this->v = other.v;
+		this->weight = other.weight;
 
 		return *this;
 	}
@@ -76,7 +80,17 @@ public:
 		return graph;
 	}
 
+	std::vector<Edge> Init_Graph(int a[][2], int n,std::vector<int> weights)
+	{
+		std::vector<Edge> graph;
+		for (int i = 0; i < n; i++)
+		{
+			Edge one(a[i][0], a[i][1],weights[i]);
+			graph.push_back(one);
+		}
 
+		return graph;
+	}
 	
 
 	void Destroy(std::vector<Edge>& graph)
@@ -377,7 +391,7 @@ public:
 	//其中，顶点表示事件， 弧表示活动，权表示活动持续的时间。
 	//要估算整项工程完成的最短时间，就是要找一条从源点到汇点的带权路径长度最长的路径，称为关键路径(Critical Path)。
 	//故在正常的情况（无环）下，网中只有一个入度为零的点，称作源点，也只有一个出度为零的点，称作汇点。
-	std::vector<int> CriticalPath(const std::vector<Edge>& Graph, std::vector<int>& weights, int number)
+	std::vector<int> CriticalPath(const std::vector<Edge>& Graph, int number)
 	{
 		//求出拓扑排序
 		std::vector<int> Topo = TopologicalSort(Graph, number);
@@ -401,7 +415,7 @@ public:
 				{
 					int v = Graph[i].v;
 
-					VE[v] = std::max(VE[v], VE[u] + weights[i]);
+					VE[v] = std::max(VE[v], VE[u] + Graph[i].weight);
 				}
 			}
 		}
@@ -418,7 +432,7 @@ public:
 			{
 				if (Graph[i].u == u)
 				{
-					VL[u] = std::min(VL[u], VL[Graph[i].v] - weights[i]);
+					VL[u] = std::min(VL[u], VL[Graph[i].v] - Graph[i].weight);
 				}
 			}
 		}
@@ -436,7 +450,7 @@ public:
 
 		for (int i = 0; i < Graph.size(); i++)
 		{
-			LT[i] = VL[Graph[i].v] - weights[i];
+			LT[i] = VL[Graph[i].v] - Graph[i].weight;
 		}
 
 
@@ -576,7 +590,7 @@ public:
 	//正权最短路径,即图的权值为正实数，求点v到其他各个点的最短路经和最短路径的长度
 	//可以用于无权最短路径，即权值为1;
 	//找局部最优路，即在已知距离的其他点里找最小距离的点组成局部最优路，再由此点更新其他点的最短距离
-	void Dijkstra_ShortestPath(const std::vector<Edge>& graph, int number,const std::vector<int>& weights,int v, std::vector<bool> vis,std::vector<int>& dist, std::vector<int>& path)
+	void Dijkstra_ShortestPath(const std::vector<Edge>& graph, int number,int v, std::vector<bool> vis,std::vector<int>& dist, std::vector<int>& path)
 	{
 		//path和dist,vis初始化由上层完成
 		
@@ -596,7 +610,7 @@ public:
 			for(int i=0;i<graph.size();i++)
 			{
 				auto p = graph[i];
-				auto info = weights[i];
+				auto info = graph[i].weight;
 				if(p.u==u)
 				{
 					int k = p.v;
@@ -630,7 +644,7 @@ public:
 	}
 
 	//Dijkstra_ShortestPath的上层，负责创建，初始化并输出dist和path
-	void Dijkstra_SearchShortestPath(const std::vector<Edge>& graph,int number,const std::vector<int>& weights, int v)
+	void Dijkstra_SearchShortestPath(const std::vector<Edge>& graph,int number, int v)
 	{
 		std::vector<int> dist, path;
 
@@ -645,7 +659,7 @@ public:
 
 		vis.resize(number, false);
 
-		Dijkstra_ShortestPath(graph,number,weights, v, vis,dist, path);
+		Dijkstra_ShortestPath(graph,number, v, vis,dist, path);
 
 		std::cout << "正权最短路:" << std::endl;
 
@@ -692,7 +706,7 @@ public:
 
 	//克鲁斯卡尔 (Kruskal)算法，可称为“加边法”，适用于稀疏图
 	//每次选出权值最小并且无法使现有的树形成环的边加入最小支撑树,返回一个图
-	std::vector<Edge> MiniSpanTree_Kruskal( std::vector<Edge> graph,int number,const std::vector<int> weights)
+	std::vector<Edge> MiniSpanTree_Kruskal( std::vector<Edge> graph,int number)
 	{
 		//非连通图
 		if (Connected_Component(graph,number) != 1)
@@ -703,21 +717,28 @@ public:
 		std::vector<Edge> MiniSpanTree;
 
 		//排序graph的边，使其从以权值从小到大排序，利用冒泡排序
-		bool flag = true;
-		while(flag)
-		{
-			flag = false;
-			for (int i = 0; i < graph.size(); i++)
-			{
-				if (weights[i] > weights[i + 1])
-				{
-					auto p = graph[i];
-					graph[i + 1] = graph[i];
-					graph[i] = p;
-					flag = true;
-				}
-			}
-		}
+		//bool flag = true;
+		//while(flag)
+		//{
+		//	flag = false;
+		//	for (int i = 0; i < graph.size() - 1; i++)
+		//	{
+		//		if (weights[i] > weights[i + 1])
+		//		{
+		//			auto p = graph[i];
+		//			graph[i + 1] = graph[i];
+		//			graph[i] = p;
+
+		//			auto q = weights[i];
+		//			weights[i] = weights[i + 1];
+		//			weights[i + 1] = q;
+
+		//			flag = true;
+		//		}
+		//	}
+		//}
+		//在Edge增加了weight成员存储权值，可以直接用sort排序
+		std::sort(graph.begin(), graph.end(), [](const Edge& a, const Edge& b)->bool {return a.weight < b.weight; });
 
 		//辅助数组Vexset,标识各个顶点所属的连通分量,类似于并查集
 		std::vector<int> Vexset;

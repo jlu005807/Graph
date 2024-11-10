@@ -3,13 +3,13 @@
 #include"Adjacency_List.h"
 #include"Orthogonal_List.h"
 #include"Adjacency_Multilist.h"
-
+#include"Chain_Forward_Star.h"
 
 void TestEdge()
 {
     Edge_manager manager;
 
-    std::vector<Edge> graph = {
+    int graphedge[][2] = {
         {0, 1}, {0, 2}, {1, 3}, {1, 4},
         {2, 5}, {3, 6}, {4, 6}, {5, 7},
         {6, 8}, {7, 9}, {8, 9}
@@ -19,6 +19,8 @@ void TestEdge()
     std::vector<int> weights = { 3, 2, 2, 1, 4, 3, 2, 3, 2, 4 ,5 };
 
     int node_count = 10;  // 节点数量为 10（0 到 9）
+
+    std::vector<Edge> graph = manager.Init_Graph(graphedge, node_count, weights);
 
     // 输出所有边
     std::cout << "初始图的边：" << std::endl;
@@ -65,7 +67,7 @@ void TestEdge()
         std::cout << "图中存在环，无法进行拓扑排序。" << std::endl;
     }
 
-    std::vector<int> critical_path = manager.CriticalPath(graph, weights, node_count);
+    std::vector<int> critical_path = manager.CriticalPath(graph, node_count);
 
     // 输出关键路径,此路径为边在Graph对应的序号
     std::cout << "关键路径为：";
@@ -92,7 +94,7 @@ void TestEdge()
     int start = 0;
 
     // Run Dijkstra's algorithm
-    manager.Dijkstra_SearchShortestPath(graph1, 8, weights1, start);
+    manager.Dijkstra_SearchShortestPath(graph1, 8, start);
     std::cout << std::endl;
 }
 
@@ -354,6 +356,62 @@ void TestAdjMulList()
     return;
 }
 
+//测试链式前向星
+void TestChain_forwardStar()
+{
+    // 顶点数
+    int vexnum = 5;
+
+    // 边数
+    int arcnum = 6;
+
+    // 边的信息，格式为 {起点, 终点, 权值}
+    int edges[][3] = {
+        {0, 1, 2},
+        {0, 2, 3},
+        {1, 3, 4},
+        {2, 3, 5},
+        {3, 4, 1},
+        {4, 0, 7}
+    };
+
+    // 创建有向图
+    Chain_forwardStar directedGraph(vexnum, arcnum, edges, true);
+    std::cout << "Directed Graph:" << std::endl;
+    directedGraph.printGraph();
+    std::cout << "\n";
+    std::cout << "Directed Graph DFS: ";
+    directedGraph.do_dfs(0);
+    std::cout << "\nDirected Graph BFS: ";
+    directedGraph.do_bfs(0);
+    std::cout << "\n";
+
+
+
+    // 创建无向图
+    Chain_forwardStar undirectedGraph(vexnum, arcnum, edges, false);
+    std::cout << "Undirected Graph:" << std::endl;
+    undirectedGraph.printGraph();
+    std::cout << "\n";
+    std::cout << "Undirected Graph DFS: ";
+    undirectedGraph.do_dfs(0);
+    std::cout << "\nUndirected Graph BFS: ";
+    undirectedGraph.do_bfs(0);
+    std::cout << "\n";
+
+    // 查找边
+    std::cout << "\nTesting find_edge function:\n";
+    std::cout << "Edge 0 -> 1 in directedGraph: "
+        << (directedGraph.find_edge(0, 1) ? "Found" : "Not Found") << "\n";
+    std::cout << "Edge 1 -> 0 in directedGraph: "
+        << (directedGraph.find_edge(1, 0) ? "Found" : "Not Found") << "\n";
+    std::cout << "Edge 0 -> 1 in undirectedGraph: "
+        << (undirectedGraph.find_edge(0, 1) ? "Found" : "Not Found") << "\n";
+    std::cout << "Edge 1 -> 0 in undirectedGraph: "
+        << (undirectedGraph.find_edge(1, 0) ? "Found" : "Not Found") << "\n";
+
+}
+
 // 主函数测试代码
 int main() {
    
@@ -374,6 +432,10 @@ int main() {
     system("Pause");
 
     TestAdjMulList();
+
+    system("Pause");
+
+    TestChain_forwardStar();
 
     system("Pause");
 

@@ -20,7 +20,7 @@ D:\Visual Studio 2022\source\repos\Graph\Graph\Chain_Forward_Star.h(96,30): warn
 D:\Visual Studio 2022\source\repos\Graph\Graph\Chain_Forward_Star.h(96,30): warning C4267:         [
 D:\Visual Studio 2022\source\repos\Graph\Graph\Chain_Forward_Star.h(96,30): warning C4267:             _Ty=int
 D:\Visual Studio 2022\source\repos\Graph\Graph\Chain_Forward_Star.h(96,30): warning C4267:         ]
-D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(911,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(959,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
 D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(819,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
 D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(637,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
 D:\Visual Studio 2022\source\repos\Graph\Graph\Adjacency_List.h(554,14): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据

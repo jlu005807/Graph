@@ -781,7 +781,7 @@ public:
 		{
 			if (i == v) continue;  // 跳过起点自身
 
-			if (dist[i] == -1)
+			if (dist[i] == -1 || dist[i] == INT_MAX)
 			{
 				// 如果 dist[i] 仍为 -1，说明从 v 到 i 不可达
 				std::cout << "No path from " << v << " to " << i << std::endl;
@@ -883,7 +883,7 @@ public:
 
 			//寻找当前未访问过并且有最小路径的点
 			int shortest = INT_MAX;
-
+			//这里为暴力算法，在顶点数过大或者稀疏图时效率极低，可以用其他数据结构存放当前路径，例如优先队列（最小堆）
 			for (int i = 0; i < list.vertices.size(); i++)
 			{
 				if (dist[i] < shortest && !vis[i])
@@ -896,6 +896,54 @@ public:
 			//访问新顶点和p
 			vis[u] = true;
 			p = list.vertices[u].firstarc;
+		}
+	}
+
+	//利用优先队列维护最短路长度最小的结点，适用于稀疏图
+	void Dijkstra_ShortestPath_optimize(const Adj_List<K, T>& list, int v, std::vector<bool>& vis, std::vector<int>& dist, std::vector<int>& path)
+	{
+		//创建优先队列，利用pair<T,int>分别存放距离，节点,默认T有greater
+		std::priority_queue<std::pair<T, int>, std::vector<std::pair<T, int>>, std::greater<std::pair<T, int>>> pq;
+		
+		//初始化
+		dist[v] = 0;
+
+		//放入队列
+		pq.push({ 0,v });
+
+		//直到队列为空则完成
+		while (!pq.empty())
+		{
+			//取当前最短路长度最小的结点
+			std::pair<T,int> node=pq.top();
+			pq.pop();
+
+			//如果此点已经找到最小路径
+			int u = node.second;
+			if (vis[u])continue;
+
+			////如果有已经更新的最短路径,放弃这个记录
+			//if (node.first > dist[u])continue;
+			//此操作和上面判断相同
+
+			//标记
+			vis[u] = true;
+
+			//更新从此点出发的其他点最短路径
+			auto p = list.vertices[u].firstarc;
+			while (p)
+			{
+				//更小则更新
+				if (dist[u] + p->info < dist[p->adjvex])
+				{
+					//更新路径和前驱并放入队列
+					dist[p->adjvex] = dist[u] + p->info;
+					path[p->adjvex] = u;
+					pq.push({ dist[p->adjvex] ,p->adjvex });
+				}
+				//后移
+				p = p->nextarc;
+			}
 		}
 	}
 
@@ -915,7 +963,8 @@ public:
 		path.resize(number, -1);
 		vis.resize(number, false);
 
-		Dijkstra_ShortestPath(list, v, vis, dist, path);
+		Dijkstra_ShortestPath_optimize(list, v, vis, dist, path);
+
 
 		std::cout << "正权最短路:" << std::endl;
 

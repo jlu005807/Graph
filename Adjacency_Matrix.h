@@ -715,6 +715,51 @@ public:
 		}
 	}
 
+	//利用优先队列维护最短路长度最小的结点，适用于稀疏图
+	void Dijkstra_ShortestPath_optimize(const Adj_Matrix& adj, int v, std::vector<bool>& vis, std::vector<int>& dist, std::vector<int>& path)
+	{
+		//创建优先队列，利用pair<T,int>分别存放距离，节点,默认T有greater
+		std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>> pq;
+
+		//初始化
+		dist[v] = 0;
+
+		//放入队列
+		pq.push({ 0,v });
+
+		//直到队列为空则完成
+		while (!pq.empty())
+		{
+			//取当前最短路长度最小的结点
+			std::pair<int, int> node = pq.top();
+			pq.pop();
+
+			//如果此点已经找到最小路径
+			int u = node.second;
+			if (vis[u])continue;
+
+			////如果有已经更新的最短路径,放弃这个记录
+			//if (node.first > dist[u])continue;
+			//此操作和上面判断相同
+
+			//标记
+			vis[u] = true;
+
+			//更新从此点出发的其他点最短路径
+			for(int i=0;i<adj.graph.size();i++)
+			{
+				//更小则更新
+				if (adj.graph[u][i] != INT_MAX && dist[u] + adj.graph[u][i] < dist[i])
+				{
+					//更新路径和前驱并放入队列
+					dist[i] = dist[u] + adj.graph[u][i];
+					path[i] = u;
+					pq.push({ dist[i] ,i });
+				}
+			}
+		}
+	}
+
 	//Dijkstra_ShortestPath的上层，负责创建，初始化并输出dist和path
 	void Dijkstra_SearchShortestPath(const Adj_Matrix& adj, int v)
 	{

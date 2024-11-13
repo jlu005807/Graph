@@ -85,7 +85,7 @@ public:
 		std::vector<Edge> graph;
 		for (int i = 0; i < n; i++)
 		{
-			Edge one(a[i][0], a[i][1],weights[i]);
+			Edge one(a[i][0], a[i][1], weights[i]);
 			graph.push_back(one);
 		}
 
@@ -590,7 +590,7 @@ public:
 	//正权最短路径,即图的权值为正实数，求点v到其他各个点的最短路经和最短路径的长度
 	//可以用于无权最短路径，即权值为1;
 	//找局部最优路，即在已知距离的其他点里找最小距离的点组成局部最优路，再由此点更新其他点的最短距离
-	void Dijkstra_ShortestPath(const std::vector<Edge>& graph, int number,int v, std::vector<bool> vis,std::vector<int>& dist, std::vector<int>& path)
+	void Dijkstra_ShortestPath(const std::vector<Edge>& graph, int number,int v, std::vector<bool>& vis,std::vector<int>& dist, std::vector<int>& path)
 	{
 		//path和dist,vis初始化由上层完成
 		
@@ -607,10 +607,11 @@ public:
 		for (int j = 0; j < number-1; j++)
 		{
 			//从目前最小路径的点出发更新未访问点的最小路径
-			for(int i=0;i<graph.size();i++)
+			for (int i = 0; i < graph.size(); i++)
 			{
 				auto p = graph[i];
-				auto info = graph[i].weight;
+				int info = graph[i].weight;
+
 				if(p.u==u)
 				{
 					int k = p.v;
@@ -640,6 +641,56 @@ public:
 
 			//访问新顶点
 			vis[u] = true;
+		}
+	}
+
+	//利用优先队列维护最短路长度最小的结点，适用于稀疏图
+	void Dijkstra_ShortestPath_optimize(const std::vector<Edge>& graph, int number, int v, std::vector<bool>& vis, std::vector<int>& dist, std::vector<int>& path)
+	{
+		//创建优先队列，利用pair<T,int>分别存放距离，节点,默认T有greater
+		std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>> pq;
+
+		//初始化
+		dist[v] = 0;
+
+		//放入队列
+		pq.push({ 0,v });
+
+		//直到队列为空则完成
+		while (!pq.empty())
+		{
+			//取当前最短路长度最小的结点
+			std::pair<int, int> node = pq.top();
+			pq.pop();
+
+			//如果此点已经找到最小路径
+			int u = node.second;
+			if (vis[u])continue;
+
+			////如果有已经更新的最短路径,放弃这个记录
+			//if (node.first > dist[u])continue;
+			//此操作和上面判断相同
+
+			//标记
+			vis[u] = true;
+
+			//更新从此点出发的其他点最短路径
+			for(int i=0;i<graph.size();i++)
+			{
+				if (graph[i].u != u)continue;
+
+				int adjvex = graph[i].v;
+				int w = graph[i].weight;
+
+				//更小则更新
+				if (dist[u] + w < dist[adjvex])
+				{
+					//更新路径和前驱并放入队列
+					dist[adjvex] = dist[u] + w;
+					path[adjvex] = u;
+					pq.push({ dist[adjvex] ,adjvex });
+				}
+			}
 		}
 	}
 
@@ -706,7 +757,7 @@ public:
 
 	//克鲁斯卡尔 (Kruskal)算法，可称为“加边法”，适用于稀疏图
 	//每次选出权值最小并且无法使现有的树形成环的边加入最小支撑树,返回一个图
-	std::vector<Edge> MiniSpanTree_Kruskal( std::vector<Edge> graph,int number)
+	std::vector<Edge> MiniSpanTree_Kruskal(std::vector<Edge> graph,int number)
 	{
 		//非连通图
 		if (Connected_Component(graph,number) != 1)
@@ -775,4 +826,11 @@ public:
 		return MiniSpanTree;
 	}
 
+	//打印函数
+	void PrintGraph(const std::vector<Edge>& graph)
+	{
+		for (const auto& edge : graph) {
+			std::cout << edge.u << " -> " << edge.v << " weight:" << edge.weight << std::endl;
+		};
+	}
 };

@@ -24,23 +24,17 @@ void TestEdge()
 
     // 输出所有边
     std::cout << "初始图的边：" << std::endl;
-    for (const auto& edge : graph) {
-        std::cout << edge.u << " -> " << edge.v << std::endl;
-    }
+    manager.PrintGraph(graph);
 
     // 测试插入边
     manager.InsertEdge(graph, 4, 7);
     std::cout << "\n插入边 4 -> 7 后的图：" << std::endl;
-    for (const auto& edge : graph) {
-        std::cout << edge.u << " -> " << edge.v << std::endl;
-    }
+    manager.PrintGraph(graph);
 
     // 测试删除边
     manager.DeleteEdge(graph, 4, 7);
     std::cout << "\n删除边 4 -> 7 后的图：" << std::endl;
-    for (const auto& edge : graph) {
-        std::cout << edge.u << " -> " << edge.v << std::endl;
-    }
+    manager.PrintGraph(graph);
 
     // 执行深度优先搜索（DFS）
     std::cout << "DFS traversal: ";
@@ -82,13 +76,14 @@ void TestEdge()
 
     // Define edges and weights
    // 定义边和权重
-    std::vector<Edge> graph1 = {
+    int graph1edge[][2] = {
         {0, 1}, {0, 2}, {1, 3}, {1, 4}, {2, 4}, {2, 5},
         {3, 6}, {4, 6}, {4, 7}, {5, 7}, {6, 7}, {3, 5}
     };
 
     std::vector<int> weights1 = { 3, 10, 5, 11, 7, 4, 2, 9, 6, 3, 1, 8 };
 
+    std::vector<Edge> graph1 = manager.Init_Graph(graph1edge, 8, weights1);
 
     // Define start and target vertices for Dijkstra's algorithm
     int start = 0;
